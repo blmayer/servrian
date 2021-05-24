@@ -280,7 +280,7 @@ int create_res_header(struct response res, char *dest) {
     sprintf(dest,
             "HTTP/%.1f %hd %s\r\n"
             "Server: %s\r\nDate: %s\r\nConnection: %s\r\n"
-            "Content-Type: %s\r\nContent-Length: %d\r\n",
+            "Content-Type: %s\r\nContent-Length: %d\r\n\r\n",
             res.version, res.status, res.stext, res.server, res.date, res.conn,
             res.ctype, res.clen);
 

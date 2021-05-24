@@ -58,7 +58,6 @@ int serve_get(int conn, struct request r) {
     create_res_header(res, response);
 
     send(conn, response, strlen(response), 0); /* Send response */
-    send(conn, "\r\n", 2, 0);                  /* Send blank line */
 
     if (res.clen > 0) {
         send(conn, res.body, res.clen, 0);
