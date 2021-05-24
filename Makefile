@@ -9,3 +9,8 @@ server: $(patsubst %.c, %.o, $(wildcard src/*.c))
 
 clean:
 	$(RM) src/*.o
+
+test:
+	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address" server
+	./server
+	
