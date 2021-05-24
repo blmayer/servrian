@@ -19,7 +19,8 @@ Simply run:
 ## Running
 
 There must be a folder named `web` in the same directory as servrian,
-containing at least a `index.html` file.
+containing at least a `index.html` file. The server will listen on port 8080
+if no *PORT* env variable is present. 
 
 
 # Meta
