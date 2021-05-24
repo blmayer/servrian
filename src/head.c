@@ -5,7 +5,6 @@
 int serve_head(short conn, struct request req, int status) {
     struct response res;
 
-    puts("serving head");
     res.server = "Servrian/" VERSION;
     res.version = 1.1;
     res.status = status;
@@ -30,10 +29,9 @@ int serve_head(short conn, struct request req, int status) {
 
     /* Create the head */
     res.stext = status_text(res.status);
-    puts("creating header");
+
     char head[MAX_HEADER_SIZE];
     create_res_header(res, head);
-    puts(head);
 
     /* Send the head */
     write(conn, head, strlen(head));
