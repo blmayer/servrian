@@ -14,12 +14,14 @@ int file_size(char *path) {
 
     if (page_file == NULL) {
         perror("something went wrong.");
+        free(real_path);
         return 0;
     }
 
     fseek(page_file, 0, SEEK_END);    /* Seek to the last byte */
     int page_size = ftell(page_file); /* The position is the size */
     fclose(page_file);
+    free(real_path);
 
     return page_size;
 }
