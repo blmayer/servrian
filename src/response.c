@@ -1,8 +1,11 @@
 #include "response.h"
 #include "defs.h"
+#include "methods.h"
+#include "webng.h"
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int get_header(int conn, char buffer[]) {
     int pos = 0;
@@ -11,13 +14,13 @@ int get_header(int conn, char buffer[]) {
     /* This is a loop that will read the data coming from our connection */
     do {
         n = recv(conn, buffer + pos, MAX_HEADER_SIZE, 0);
-        if (n == -1) {
+        if (n < 1) {
             return -1;
         }
         pos += n;
 
         /* The only thing that can break our loop is a blank line */
-        if (strncmp(buffer + pos - 4, "\r\n\r\n", 4) == 0) {
+        if (strncmp(&buffer[pos - 4], "\r\n\r\n", 4) == 0) {
             buffer[pos] = '\0';
             break;
         }
@@ -50,37 +53,28 @@ receive:
 
     /* Populate our struct with request */
     if (parse_request(header, &req) < 0) {
-        serve_head(cli_conn, req, 400);
+        serve_status(cli_conn, req, 400);
 
         return 0;
     }
 
     /* Process the response with the correct method */
-    switch (strcmp(req.method, "PEZ")) {
-    case -8:
-        if (serve_head(cli_conn, req, 200) < 0) {
-            perror("unable to respond");
-        }
-
-        break;
-
-    case -9:
+    if (!strcmp("GET", req.method)) {
         if (serve_get(cli_conn, req) < 0) {
             perror("a problem occurred");
         }
-
-        break;
-
-    default:
-        if (serve_head(cli_conn, req, 501) < 0) {
+    } else if (!strcmp("HEAD", req.method)) {
+        if (serve_head(cli_conn, req) < 0) {
+            perror("unable to respond");
+        }
+    } else {
+        if (serve_status(cli_conn, req, 501) < 0) {
             perror("a problem occurred");
         }
     }
 
     /* Close connection depending on the case */
-    if (req.conn == NULL && req.version > 1) {
-        goto receive;
-    } else if (req.conn != NULL && strcmp(req.conn, "Close")) {
+    if (req.conn != NULL && !strcmp(req.conn, "Keep-Alive")) {
         goto receive;
     }
 
