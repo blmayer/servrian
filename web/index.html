@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Brian Mayer's frontpage</title>
+    <meta charset="UTF-8" />
+    <meta name="language" content="english" />
+    <meta name="author" content="Brian Lee Mayer">
+    <meta name="description" content="blmayer.dev is my website, find here some of my projects and CV." />
+    <meta name="keywords" content="developer, CV, programmer, brian, mayer, blmayer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --color-0: #101010;
+            --color-1: LawnGreen;
+            --color-2: Fuchsia;
+        }
+
+        html {
+            background-color: var(--color-0);
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        html::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 0 20px;
+            font-family: Courier, monospace;
+            color: var(--color-1);
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        nav {
+            min-width: 200px;
+            padding-right: 30px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        a {
+            color: var(--color-1);
+        }
+
+        hr {
+            width: 80%;
+            height: 2px;
+            margin: 40px auto 20px auto;
+            border-top: 3px dotted var(--color-2);
+            border-right: none;
+            border-bottom: 3px dotted var(--color-2);
+            border-left: none;
+        }
+
+        .line {
+            width: 100%;
+            border-top: none;
+            border-bottom: 3px dashed var(--color-2);
+        }
+
+        htop {
+            font-size: larger;
+            display: flex;
+            justify-content: center;
+        }
+
+        diff {
+            color: var(--color-2);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="row">
+            arch@blmayer$ ls -h
+        </div>
+        <div class="row">
+            <a href="index.html">index</a>
+            <a href="htop.html">htop</a>
+            <a href="feitaemcasa.html">homemade-recipes</a>
+            <a href="deep.html">deep</a>
+            <a href="asciichartr.html">asciichartr</a>
+            <a href="awslambdarpc.html">awslambdarpc</a>
+        </div>
+    </header>
+    <hr />
+    <div class="row">
+        <nav>
+            <pre>
+.
+├── <a href="#licentiate">licentiate degree/</a>
+│   │
+│   │
+│   │
+│   └── monography
+│
+├── <a href="#bachelor">bachelor degree/</a>
+│   │
+│   └── article
+│
+├── <a href="#masters">master of science/</a>
+│   │
+│   ├── article
+│   │
+│   ├── article
+│   │
+│   ├── summer school
+│   │
+│   ├── nn lecture
+│   ├── nn workshop
+│   │
+│   └── master's thesis
+│
+│
+├── <a href="#looqbox">looqbox/</a>
+│
+│
+├── <a href="#poupachef">poupachef/</a>
+│
+├── <a href="#phd">phd/</a>
+│
+│
+├── <a href="#mentor">hackaton mentor</a>
+│
+├── <a href="#medium">medium post</a>
+│
+├── article
+│
+└── <a href="#tradersclub">tradersclub/</a>
+
+7 directories
+11 files
+</pre>
+        </nav>
+        <div>
+            <h2 id="licentiate">licentiate degree</h2>
+            <p>
+                <diff>@@ -2010-01-01 +2014-01-01 @@</diff><br />
+                Licentiate degree in Mathematics by Universidade
+                Presbiteriana Mackenzie.
+            </p>
+
+            <h3>monography</h3>
+            <p>
+                <diff>@@ title @@</diff> Integrando Alguns Conteúdos do
+                Ensino Médio com Equações Diferença
+            </p>
+
+            <h2 id="bachelor">bachelor degree</h2>
+            <p>
+                Bachelor degree in Mathematics by Universidade Presbiteriana
+                Mackenzie.
+            </p>
+
+            <h3>article</h3>
+            <p>
+                <diff>@@ title @@</diff> Equações de Diferenças aplicadas em
+                Séries e em outras áreas do conhecimento
+            </p>
+
+            <h2 id="masters">master of science</h2>
+            <p>
+                <diff>@@ -2015-06-01 +2016-06-01 @@</diff><br />
+                MsC in Electrical engineering and computing by Universidade
+                Presbiteriana Mackenzie.
+            </p>
+            <p>Supervisor: Dr. Luiz Henrique Alves Monteiro.</p>
+
+            <h3>article</h3>
+            <p>
+                <diff>@@ title @@</diff> Sincronismo entre Redes Neurais
+                Complexas: Um Modelo de Sistema Visual de Mamíferos
+            </p>
+            <p>
+                <diff>@@ journal @@ </diff> Proceeding Series of the
+                Brazilian Society of Computational and Applied Mathematics
+            </p>
+            <p>
+                <diff>@@ DOI @@</diff>
+                <a href="http://dx.doi.org/10.5540/03.2016.004.01.0007">
+                    http://dx.doi.org/10.5540/03.2016.004.01.0007
+                </a>
+            </p>
+
+            <h3>article</h3>
+            <p>
+                <diff>@@ title @@</diff> On Synchronizing Coupled
+                Retinogeniculocortical Pathways: A Toy Model
+            </p>
+
+            <p>
+                <diff>@@ journal @@</diff> Computational Intelligence and
+                Neuroscience
+            </p>
+            <p>
+                <diff>@@ DOI @@</diff>
+                <a href="https://www.hindawi.com/journals/cin/2018/6858176/">
+                    https://www.hindawi.com/journals/cin/2018/6858176/
+                </a>
+            </p>
+
+            <h3>wolfram summer school</h3>
+            <p>
+                <diff>@@ project @@</diff> UNICODE OCR with Neural Networks
+            </p>
+
+            <h3>neural networks lecture</h3>
+            <p>
+                <diff>@@ -2016-11-06 +2016-11-06 @@</diff><br />
+                Gave a lecture about the new, at the time, Wolfram Mathematica
+                neural networks framework features, during the Brazilian Wolfram
+                Conference at Universidade Presbiteriana Mackenzie.
+            </p>
+
+            <h3>neural networks workshop</h3>
+            <p>
+                <diff>@@ -2016-11-20 +2016-11-20 @@</diff><br />
+                Ministered a workshop about the Wolfram Mathematica neural networks
+                framework features and applications, during the Semana da Computação
+                Natural given by the Natural Computing Laboratory at Universidade
+                Presbiteriana Mackenzie.
+            </p>
+
+            <h3>master's thesis</h3>
+            <p>
+                <diff>@@ title @@</diff> Redes de Newman-Watts Acopladas
+                Como Modelo de Sistema Visual de Mamíferos
+            </p>
+
+            <h2 id="looqbox">looqbox</h2>
+            <p>
+                <diff>@@ -2017-02-01 +2019-02-01 @@</diff><br />
+                Looqbox is a business intelligence startup situated in São
+                Paulo, Brazil. I worked there for 2 years, mostly as data
+                scientist, and back-end developer. I developed
+                skills in R, Python, Docker and Java, during the data
+                scientist period I stayed very close to many clients,
+                acting like project manager for some cases.
+            </p>
+            <p>Some projects worth mentioning are:</p>
+            <diff>Developer docker image ++++</diff>
+            <dd>
+                Built a docker image with RStudio and all configs/assets
+                needed for devs, the intention was to provide a uniform
+                and complete environment for developers.
+            </dd>
+
+            <diff>ODBC Support +++++++++</diff>
+            <dd>
+                This project installed drivers and made all integrations
+                on the platform so the clients could use ODBC databases
+                seamlesly.
+            </dd>
+
+            <h2 id="poupachef">poupachef</h2>
+            <p>
+                <diff>@@ -2019-03-01 +2020-10-01 @@</diff><br />
+                Poupachef is a startup that connects food distributors to
+                restaurants, bakeries and bars I co-founded. During the two
+                years of work I developed the whole cloud infrastructure,
+                micro-services, android app, intranet and data routines.
+            </p>
+            <p>
+                Micro-services where written in Golang and deployed as
+                lambda functions using cloud formation, and data routines
+                in Python, using MySQL and MongoDB as data bases.
+            </p>
+            <p>
+                The cloud was a hibrid of AWS/GCP, with back-end services
+                in AWS and data routine/MySQL on GCP. The Android app had
+                its first version in Kotlin, then it was converted to React
+                Native.
+            </p>
+
+            <h2 id="phd">phd</h2>
+            <p>
+                <diff>@@ -2019-06-01 +now @@</diff><br />
+                PhD in Electrical Engineering and computing by Universidade
+                Presbiteriana Mackenzie.
+            </p>
+
+            <h3 id="mentor">mentor at HACKCOVID19</h3>
+            <p>
+                <diff>@@ -2020-05-06 +2020-05-22 @@</diff><br />
+                Tech mentoring during a hackaton about COVID19, check the
+                official website
+                <a href="https://hackcovid-19.devpost.com">devpost website</a>.
+            </p>
+
+            <h3 id="medium">medium post</h3>
+            <p>
+                <diff>@@ title @@</diff> Running and debugging Go Lambda
+                functions locally<br />
+                <diff>@@ link @@</diff>
+                <a
+                    href="https://medium.com/nagoya-foundation/running-and-debugging-go-lambda-functions-locally-156893e4ed0d">
+                    Medium post
+                </a>
+            </p>
+
+            <h3>article</h3>
+            <p>
+                <diff>@@ title @@</diff> A Numerical Study on the Regularity of d-Primes
+                via Informational Entropy and Visibility Algorithms
+            </p>
+            <p>
+                <diff>@@ journal @@</diff> Complexity
+            </p>
+            <p>
+                <diff>@@ DOI @@</diff>
+                <a href="https://www.hindawi.com/journals/complexity/2020/1480890/">
+                    https://www.hindawi.com/journals/complexity/2020/1480890/
+                </a>
+            </p>
+
+            <h2 id="tradersclub">tradersclub</h2>
+            <p>
+                <diff>@@ -2020-10-01 +now @@</diff><br />
+                I'm currently working as a Golang back-end developer,
+                developing the payment micro-service and working on
+                projects like Hubspot and service invoices integrations.
+            </p>
+        </div>
+    </div>
+    <hr class="line" />
+    <footer>
+        <pre>
+ ______________________________________
+/ Wasting time is an important part of \
+\ living.                              /
+ --------------------------------------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+            </pre>
+        <div>
+            <p>
+                <diff>@@ email @@</diff>
+                <a href="mailto:bleemayer@gmail.com">bleemayer@gmail.com</a>
+            </p>
+            <p>
+                <diff>@@ github @@</diff>
+                <a href="https://github.com/blmayer">github.com/blmayer</a>
+            </p>
+            <p>
+                <diff>@@ buy me a coffee @@</diff>
+                <a href="https://ko-fi.com/blmayer">ko-fi.com/blmayer</a>
+            </p>
+            <p>
+                This work by Brian Mayer is licensed<br />under
+                <a href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>
+            </p>
+        </div>
+    </footer>
+</body>
+
+</html>
