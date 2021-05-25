@@ -5,7 +5,7 @@ server: $(patsubst %.c,%.o,$(wildcard src/*.c))
 	$(CC) $(CFLAGS) $^ -o bin/$@
 
 release:
-	$(MAKE) CFLAGS="-Ofast" server
+	$(MAKE) CFLAGS="-Ofast -static" server
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
