@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 /* Opens a TCP socket at the desired port and listens to connections */
-int main(int argc, char *argv[]) {
+int main(void) {
     int portnum = 8080;
 
     char *port = getenv("PORT");
