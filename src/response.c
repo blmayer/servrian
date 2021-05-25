@@ -1,4 +1,5 @@
 #include "response.h"
+#include "aux.h"
 #include "defs.h"
 #include "methods.h"
 #include "webng.h"
@@ -59,15 +60,18 @@ receive:
     }
 
     /* Process the response with the correct method */
-    if (!strcmp("GET", req.method)) {
+    switch (hash(req.method)) {
+    case 227:
         if (serve_get(cli_conn, req) < 0) {
             perror("a problem occurred");
         }
-    } else if (!strcmp("HEAD", req.method)) {
+        break;
+    case 280:
         if (serve_head(cli_conn, req) < 0) {
             perror("unable to respond");
         }
-    } else {
+        break;
+    default:
         if (serve_status(cli_conn, req, 501) < 0) {
             perror("a problem occurred");
         }
