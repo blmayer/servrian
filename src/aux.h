@@ -5,14 +5,13 @@
 #ifndef AUXFNS_H
 #define AUXFNS_H
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
-#include <openssl/sha.h>
+#include <unistd.h>
+
+int hash(char *str);
 
 /* File operations definitions */
 
@@ -31,4 +30,3 @@ char *status_text(short status);
 char *mime_type(char *ext);
 
 #endif
-

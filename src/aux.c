@@ -2,7 +2,16 @@
 #include "defs.h"
 #include <string.h>
 
-/* File operations definitions */
+int hash(char *str) {
+    int res = 0;
+    int pos = 0;
+
+    while (str[pos]) {
+        res += str[pos] + pos;
+        pos++;
+    }
+    return res;
+}
 
 int file_size(char *path) {
     /* Get the length of the file requested */
@@ -69,27 +78,27 @@ char *status_text(short status) {
 
 char *mime_type(char *path) {
     /* Match the extension against some cases */
-    static char *mime;
-    switch (strcmp(strrchr(path, '.'), ".bsog")) {
-    case 6:
+    char *mime;
+    switch (hash(strrchr(path, '.'))) {
+    case 493:
         mime = "text/html";
         break;
-    case 1:
+    case 381:
         mime = "text/css";
         break;
-    case 2:
+    case 270:
         mime = "application/javascript";
         break;
-    case 14:
+    case 377:
         mime = "image/png";
         break;
-    case 17:
+    case 388:
         mime = "image/svg+xml";
         break;
-    case 7:
+    case 367:
         mime = "image/x-icon";
         break;
-    case 21:
+    case 490:
         mime = "application/x-font-woff";
         break;
     default:
