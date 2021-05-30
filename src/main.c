@@ -5,6 +5,16 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
+
+int server;
+
+void sig_handler() {
+    puts("closing server");
+    close(server);
+    exit(1);
+}
+
 
 /* Opens a TCP socket at the desired port and listens to connections */
 int main(void) {
@@ -15,8 +25,12 @@ int main(void) {
         portnum = atoi(port);
     }
 
+    signal(SIGINT, sig_handler);
+    signal(SIGKILL, sig_handler);
+    signal(SIGSTOP, sig_handler);
+
     /* Initiate a TCP socket */
-    int server = socket(AF_INET, SOCK_STREAM, 0);
+    server = socket(AF_INET, SOCK_STREAM, 0);
     if (server < 0) {
         perror("socket creation failed");
         return 0;
