@@ -1,11 +1,11 @@
-.PHONY: server clean test debug test_hash
+.PHONY: servrian clean test debug test_hash
 CFLAGS=-g -O0 -Wall -Wextra
 
-server: $(patsubst %.c,%.o,$(wildcard src/*.c))
+servrian: $(patsubst %.c,%.o,$(wildcard src/*.c))
 	$(CC) $(CFLAGS) $^ -o bin/$@
 
 release:
-	$(MAKE) CFLAGS="-Ofast -static" server
+	$(MAKE) CFLAGS="-Ofast -static" servrian
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -21,6 +21,6 @@ test_hash: src/test/test_hash.c src/aux.c
 	$(CC) $(CFLAGS) $^ -o bin/$@
 
 debug:
-	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address" server
-	./server
+	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address" servrian
+	./servrian
 	
