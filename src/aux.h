@@ -27,6 +27,8 @@ char *date_line();
 
 char *status_text(short status);
 
+char *conn_text(int closeconn);
+
 char *mime_type(char *ext);
 
 #endif

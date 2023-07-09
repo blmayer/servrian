@@ -13,28 +13,6 @@ int hash(char *str) {
     return res;
 }
 
-int file_size(char *path) {
-    /* Get the length of the file requested */
-    char *real_path = malloc(strlen(PAGES_DIR) + strlen(path) + 1);
-    strcpy(real_path, PAGES_DIR);
-    strcat(real_path, path);
-
-    FILE *page_file = fopen(real_path, "r");
-
-    if (page_file == NULL) {
-        perror("something went wrong.");
-        free(real_path);
-        return 0;
-    }
-
-    fseek(page_file, 0, SEEK_END);    /* Seek to the last byte */
-    int page_size = ftell(page_file); /* The position is the size */
-    fclose(page_file);
-    free(real_path);
-
-    return page_size;
-}
-
 /* Header processing tools */
 
 char *date_line() {
@@ -51,29 +29,24 @@ char *date_line() {
 }
 
 char *status_text(short status) {
-    /* Make the status line */
-    static char *status_line;
     switch (status) {
     case 200:
-        status_line = "OK";
-        break;
+        return STATUS_200;
     case 400:
-        status_line = "Bad Request";
-        break;
+        return STATUS_400;
     case 404:
-        status_line = "Not Found";
-        break;
+        return STATUS_404;
     case 500:
-        status_line = "Internal Server Error";
-        break;
+        return "Internal Server Error";
     case 501:
-        status_line = "Not Implemented";
-        break;
+        return "Not Implemented";
     default:
-        status_line = "Unknown";
+        return "Unknown";
     }
+}
 
-    return status_line;
+char *conn_text(int closeconn) {
+	return closeconn ? CONN_CLOSE : CONN_KEEPA;
 }
 
 char *mime_type(char *path) {

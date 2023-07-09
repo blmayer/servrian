@@ -62,12 +62,8 @@ receive:
     /* Process the response with the correct method */
     switch (hash(req.method)) {
     case 227:
-        if (serve_get(cli_conn, req) < 0) {
-            perror("a problem occurred");
-        }
-        break;
     case 280:
-        if (serve_head(cli_conn, req) < 0) {
+        if (serve(cli_conn, req) < 0) {
             perror("unable to respond");
         }
         break;

@@ -16,7 +16,6 @@ void sig_handler() {
 }
 
 
-/* Opens a TCP socket at the desired port and listens to connections */
 int main(void) {
     int portnum = 8080;
 
@@ -39,10 +38,8 @@ int main(void) {
     /* Make server reuse addresses */
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
-    /* I like this object now */
-    struct sockaddr_in serv, client;
-
     /* The server attributes */
+    struct sockaddr_in serv, client;
     serv.sin_family = AF_INET;
     serv.sin_port = htons(portnum);
     serv.sin_addr.s_addr = INADDR_ANY;

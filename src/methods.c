@@ -4,129 +4,66 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 #include <unistd.h>
 
-int serve_get(int conn, struct request r) {
-    struct response res;
+int serve(int conn, struct request r) {
+	int status = 200;
+	int clen = 0;
+	int closeconn = 0;
 
-    res.server = "Servrian/" VERSION;
-    res.version = 1.1;
-    res.status = 200;
-    res.path = r.url;
+	/* If / was passed, redirect to index page */
+	char path[MAX_PATH_SIZE] = PAGES_DIR;
+	if (strlen(r.url) == 1) {
+		strcat(path, "/index.html");
+	} else {
+		strcat(path, r.url);
+	}
 
-    /* If / was passed, redirect to index page */
-    if (strlen(res.path) == 1) {
-        res.path = "/index.html";
-    }
+	/* Verify the connection and request version */
+	if (r.conn != NULL && (strcmp(r.conn, "Close") || r.version == 1)) {
+		closeconn = 1;
+	}
 
-    /* Read file and create response ----------------------------------- */
-    char *path = calloc(strlen(PAGES_DIR) + strlen(res.path) + 1, 1);
-    strcpy(path, PAGES_DIR);
-    strcat(path, res.path);
+	/* Read file and create response ---------------------------------- */
 
-    /* Open the file for reading */
-    FILE *page_file = fopen(path, "rb");
+	/* Open the file for reading */
+	FILE *page_file = fopen(path, "rb");
+	if (page_file == NULL) {
+		return serve_status(conn, r, 404);
+	} else {
+		fseek(page_file, 0, SEEK_END); /* Seek to the end */
+		clen = ftell(page_file);       /* This position's the size */
+		rewind(page_file);             /* Go back to the start */
+	}
 
-    if (page_file == NULL) {
-        res.status = 404;
-        res.clen = 0;
-        res.conn = "Close";
-    } else {
-        fseek(page_file, 0, SEEK_END); /* Seek to the end */
-        res.clen = ftell(page_file);   /* This position's the size */
-        rewind(page_file);             /* Go back to the start */
+	dprintf(
+		conn,
+		"HTTP/%.1f %d %s\r\n"
+		"Server: " SERVER_NAME "\r\n"
+		"Date: %s\r\n"
+		"Connection: %s\r\n"
+		"Content-Type: %s\r\n"
+		"Content-Length: %d\r\n\r\n",
+		r.version, status, status_text(status), date_line(),
+		conn_text(closeconn), mime_type(path), clen
+	 );
 
-        /* Read it all in one operation and close */
-        res.body = malloc(res.clen + 1);
-        fread(res.body, res.clen, sizeof(char), page_file);
-        fclose(page_file);      /* Close the file */
-        res.body[res.clen] = 0; /* Add the terminating zero */
-        res.status = 200;
-    }
+	if (clen && !strcmp(r.method, "HEAD")) {
+		sendfile(conn, fileno(page_file), NULL, clen);
+	}
 
-    /* Verify the connection and request version */
-    if (r.conn == NULL && r.version > 1) {
-        res.conn = "Keep-Alive";
-    } else if (r.conn != NULL && strcmp(r.conn, "Close")) {
-        res.conn = "Close";
-    }
-
-    res.stext = status_text(res.status); /* Write the status text */
-    res.ctype = mime_type(path);         /* Update the content type */
-    res.date = date_line();              /* Put the date line */
-
-    /* Create the head */
-    char response[MAX_HEADER_SIZE];
-    create_res_header(res, response);
-
-    send(conn, response, strlen(response), 0); /* Send response */
-
-    if (res.clen > 0) {
-        send(conn, res.body, res.clen, 0);
-    }
-    free(path);
-    free(res.body);
-
-    return 0;
+	return 0;
 }
 
-int serve_head(int conn, struct request r) {
-    struct response res;
-
-    res.server = "Servrian/" VERSION;
-    res.version = 1.1;
-    res.date = date_line();
-    res.path = r.url;
-    res.status = 200;
-    res.conn = "Close";
-
-    /* If / was passed, redirect to index page */
-    if (strlen(res.path) == 1) {
-        res.path = "/index.html";
-    }
-
-    /* Get the page file's size */
-    res.clen = file_size(res.path);
-    res.ctype = mime_type(res.path);
-
-    if (res.clen == 0) {
-        /* Something went wrong, probably file was not found */
-        res.status = 404;
-        res.clen = 0;
-    }
-
-    /* Create the head */
-    res.stext = status_text(res.status);
-
-    char head[MAX_HEADER_SIZE];
-    create_res_header(res, head);
-
-    /* Send the head */
-    send(conn, head, strlen(head), 0);
-
-    return 0;
-}
-
-int serve_status(int conn, struct request r, int status) {
-    struct response res;
-
-    res.server = "Servrian/" VERSION;
-    res.version = 1.1;
-    res.status = status;
-    res.date = date_line();
-    res.path = r.url;
-    res.ctype = "text/html";
-    res.clen = 0;
-    res.conn = "Close";
-
-    /* Create the head */
-    res.stext = status_text(res.status);
-
-    char head[MAX_HEADER_SIZE];
-    create_res_header(res, head);
-
-    /* Send the head */
-    send(conn, head, strlen(head), 0);
-
-    return 0;
+int serve_status(int conn, struct request req, int status) {
+	return dprintf(
+		conn,
+		"HTTP/%.1f %d %s\r\n"
+		"Server: " SERVER_NAME "\r\n"
+		"Date: %s\r\n"
+		"Connection: Close\r\n"
+		"Content-Length: 0\r\n\r\n",
+		req.version, status, status_text(status), date_line()
+	 );
 }

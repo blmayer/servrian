@@ -8,40 +8,11 @@
 #ifndef WEBNG_H
 #define WEBNG_H
 
+#include "defs.h"
+
 /*
  * Objects definitions
  */
-
-/* Our structure that contains the response's data */
-struct response {
-    short status;
-    char *stext;
-    char *path;
-    float version;
-    char *server;
-    char *date;
-    char *conn;
-    char *cenc;
-    char *ctype;
-    int clen;
-    char *ttype;
-    char *body;
-};
-
-/* Our structure that contains the request's data */
-struct request {
-    char *method;
-    char *url;
-    float version;
-    char *host;
-    char *conn;
-    char *user;
-    char *cenc;
-    char *ctype;
-    int clen;
-    char *ttype;
-    char *body;
-};
 
 struct url {
     char *proto;
@@ -66,10 +37,10 @@ char *get_token(char *source, char *par);
 int parse_URL(char *url, struct url *addr);
 
 /* Parses a string and populates the request structure */
-int parse_request(char *message, struct request *req);
+int parse_request(char message[MAX_HEADER_SIZE], struct request *req);
 
 /* Parses a string and populates the response structure */
-int parse_response(char *message, struct response *res);
+int parse_response(char* message, struct response *res);
 
 /* Calculates a request header size */
 int req_header_len(struct request req);

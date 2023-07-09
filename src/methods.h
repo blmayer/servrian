@@ -10,10 +10,7 @@
 #include "webng.h"
 
 /* Respond to a get request*/
-int serve_get(int conn, struct request r);
-
-/* Respond to a head request */
-int serve_head(int conn, struct request req);
+int serve(int conn, struct request r);
 
 /* Receives connection's parameters and serve a header */
 int serve_status(int conn, struct request req, int status);

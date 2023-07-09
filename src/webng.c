@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "webng.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -101,7 +102,7 @@ int parse_URL(char *url, struct url *addr) {
     return 0;
 }
 
-int parse_request(char *message, struct request *req) {
+int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
     /* Get first line parameters */
     req->method = strtok(message, " "); /* First token is the method */
     if (req->method == NULL) {
