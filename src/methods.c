@@ -17,6 +17,8 @@ int serve(int conn, struct request r) {
 	/* If / was passed, redirect to index page */
 	char path[MAX_PATH_SIZE];
 	strcpy(path, root);
+	char *host = strtok(r.host, ":");
+	strcat(path, host);
 	if (strlen(r.url) == 1) {
 		strcat(path, "/index.html");
 	} else {
