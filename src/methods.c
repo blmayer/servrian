@@ -10,6 +10,10 @@
 extern char root[MAX_PATH_SIZE];
 
 int serve(int conn, struct request r) {
+	if (strstr(r.url, "..")) {
+		return serve_status(conn, r, 400);
+	}
+
 	int status = 200;
 	int clen = 0;
 	int closeconn = 0;
