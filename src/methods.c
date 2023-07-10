@@ -27,7 +27,6 @@ int serve(int conn, struct request r) {
 
 	/* Read file and create response ---------------------------------- */
 
-	/* Open the file for reading */
 	FILE *page_file = fopen(path, "rb");
 	if (page_file == NULL) {
 		return serve_status(conn, r, 404);
@@ -49,9 +48,10 @@ int serve(int conn, struct request r) {
 		conn_text(closeconn), mime_type(path), clen
 	 );
 
-	if (clen && !strcmp(r.method, "HEAD")) {
-		sendfile(conn, fileno(page_file), NULL, clen);
+	if (clen && strcmp(r.method, "HEAD")) {
+		sendfile(conn, fileno(page_file), &(off_t){0}, clen);
 	}
+	fclose(page_file);
 
 	return 0;
 }
