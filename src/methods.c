@@ -7,13 +7,16 @@
 #include <sys/sendfile.h>
 #include <unistd.h>
 
+extern char root[MAX_PATH_SIZE];
+
 int serve(int conn, struct request r) {
 	int status = 200;
 	int clen = 0;
 	int closeconn = 0;
 
 	/* If / was passed, redirect to index page */
-	char path[MAX_PATH_SIZE] = PAGES_DIR;
+	char path[MAX_PATH_SIZE];
+	strcpy(path, root);
 	if (strlen(r.url) == 1) {
 		strcat(path, "/index.html");
 	} else {

@@ -1,6 +1,8 @@
 #include "response.h"
+#include "defs.h"
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -8,6 +10,7 @@
 #include <signal.h>
 
 int server;
+char root[MAX_PATH_SIZE];
 
 void sig_handler() {
     puts("closing server");
@@ -15,13 +18,19 @@ void sig_handler() {
     exit(1);
 }
 
-
-int main(void) {
+int main(int argc, char *argv[]) {
     int portnum = 8080;
 
     char *port = getenv("PORT");
     if (port != NULL) {
         portnum = atoi(port);
+    }
+
+    for (int i = 1; i < argc; i++) {
+	if (argv[i][1] == 'r') {
+		strcpy(root, argv[i+1]);
+		printf("set root dir to %s\n", root);
+	}
     }
 
     signal(SIGINT, sig_handler);

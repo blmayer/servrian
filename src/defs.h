@@ -4,7 +4,6 @@
 #define SERVER_NAME "Servrian v1.1.0"
 #define MAX_HEADER_SIZE 8*1024
 #define MAX_PATH_SIZE 256
-#define PAGES_DIR "www"
 
 #define STATUS_200 "OK"
 #define STATUS_400 "Bad Request"
