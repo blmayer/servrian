@@ -37,9 +37,9 @@ char *status_text(short status) {
     case 404:
         return STATUS_404;
     case 500:
-        return "Internal Server Error";
+        return STATUS_500;
     case 501:
-        return "Not Implemented";
+        return STATUS_501;
     default:
         return "Unknown";
     }

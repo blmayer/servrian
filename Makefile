@@ -1,5 +1,5 @@
 .PHONY: servrian clean test debug test_hash
-CFLAGS=-g -O0 -Wall -Wextra
+CFLAGS=-g -O0 -Wall -Wextra -fsanitize=address -fsanitize=bounds
 
 servrian: $(patsubst %.c,%.o,$(wildcard src/*.c))
 	[ -e bin ] || mkdir bin
