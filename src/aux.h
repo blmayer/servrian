@@ -10,16 +10,11 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include "defs.h"
 
 int hash(char *str);
 
-/* File operations definitions */
-
-int file_size(char *path);
-
-char *load_file(char *path);
-
-short write_log(char buff[512]);
+int parse_request(char message[MAX_HEADER_SIZE], struct request *req);
 
 /* Header processing tools */
 

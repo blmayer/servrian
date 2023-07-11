@@ -14,35 +14,44 @@
 #define CONN_CLOSE "Close"
 #define CONN_KEEPA "Keep-Alive"
 
+struct url {
+	char *proto;
+	char *ip;
+	char *port;
+	char *domain;
+	char *path;
+	char *pars;
+};
+
 /* Our structure that contains the response's data */
 struct response {
-    short status;
-    char *stext;
-    char path[MAX_PATH_SIZE];
-    float version;
-    char *server;
-    char *date;
-    char *conn;
-    char *cenc;
-    char *ctype;
-    int clen;
-    char *ttype;
-    char *body;
+	short status;
+	char *stext;
+	char path[MAX_PATH_SIZE];
+	float version;
+	char *server;
+	char *date;
+	char *conn;
+	char *cenc;
+	char *ctype;
+	int clen;
+	char *ttype;
+	char *body;
 };
 
 /* Our structure that contains the request's data */
 struct request {
-    char *method;
-    char *url;
-    float version;
-    char *host;
-    char *conn;
-    char *user;
-    char *cenc;
-    char *ctype;
-    int clen;
-    char *ttype;
-    char *body;
+	char *method;
+	char *url;
+	float version;
+	char *host;
+	char *conn;
+	char *user;
+	char *cenc;
+	char *ctype;
+	int clen;
+	char *ttype;
+	char *body;
 };
 
 #endif

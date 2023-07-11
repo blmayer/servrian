@@ -1,7 +1,6 @@
 #include "response.h"
 #include "aux.h"
 #include "defs.h"
-#include "webng.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
