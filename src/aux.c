@@ -165,6 +165,8 @@ char *mime_type(char *path) {
 	switch (hash(strrchr(path, '.'))) {
 		case 493:
 			return "text/html";
+		case 389:
+			return "text/xml";
 		case 381:
 			return "text/css";
 		case 270:
