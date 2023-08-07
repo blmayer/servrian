@@ -167,6 +167,8 @@ char *mime_type(char *path) {
 			return "text/html";
 		case 389:
 			return "text/xml";
+		case 395:
+			return "text/xsl";
 		case 381:
 			return "text/css";
 		case 270:
