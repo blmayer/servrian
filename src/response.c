@@ -46,21 +46,30 @@ int handle_request(int cli_conn) {
     /* ---- Read the request and respond ------------------------------ */
 
 receive:
-    /* Prepare variables to receive data */
+    /* prepare variables to receive data */
     bzero(&req, sizeof(struct request));
     bzero(header, MAX_HEADER_SIZE);
 
-    /* Read request */
+    /* read request */
     if (get_header(cli_conn, header) < 1) {
         return 0;
     }
 
-    /* Populate our struct with request */
+    /* populate our struct with request */
     if (parse_request(header, &req) < 0) {
         serve_status(cli_conn, req, 400);
         return 0;
     }
     printf("%s: %s Host: %s Accept-Encoding: %s\n", req.method, req.url, req.host, req.cenc);
+
+    /* some security checks */
+    if (!req.host) {
+	    return serve_status(cli_conn, req, 400);
+    }
+
+    if (strstr(req.url, "..") || strstr(req.host, "..") || *req.host == '/') {
+	    return serve_status(cli_conn, req, 400);
+    }
 
     /* Process the response with the correct method */
     switch (*req.method) {
@@ -85,10 +94,6 @@ receive:
 }
 
 int serve(int conn, struct request r) {
-	if (strstr(r.url, "..")) {
-		return serve_status(conn, r, 400);
-	}
-
 	int status = 200;
 	int clen = 0;
 	int closeconn = 0;
@@ -96,8 +101,7 @@ int serve(int conn, struct request r) {
 	/* If / was passed, redirect to index page */
 	char path[MAX_PATH_SIZE];
 	strcpy(path, root);
-	char *host = strtok(r.host, ":");
-	strcat(path, host);
+	strcat(path, r.host);
 	if (strlen(r.url) == 1) {
 		strcat(path, "/index.html");
 	} else {
