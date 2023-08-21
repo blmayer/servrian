@@ -118,7 +118,7 @@ int serve(int conn, struct request r) {
 	printf("serving file %s\n", path);
 
 	/* Verify the connection and request version */
-	if (r.conn != NULL && (strcmp(r.conn, "Close") || r.version == 1)) {
+	if (r.conn != NULL && (!strcmp(r.conn, "Close") || r.version == 1)) {
 		closeconn = 1;
 	}
 
