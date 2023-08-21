@@ -93,13 +93,13 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
             temp = strtok(NULL, "\r\n");
             continue;
         }
-        if (strncmp(temp, "Content-Type: ", 14) == 0) {
-            req->ctype = temp + 14;
+        if (strncmp(temp, "Accept: ", 8) == 0) {
+            req->ctype = temp + 8;
             temp = strtok(NULL, "\r\n");
             continue;
         }
-        if (strncmp(temp, "Content-Encoding: ", 18) == 0) {
-            req->cenc = temp + 18;
+        if (strncmp(temp, "Accept-Encoding: ", 17) == 0) {
+            req->cenc = temp + 17;
             temp = strtok(NULL, "\r\n");
             continue;
         }

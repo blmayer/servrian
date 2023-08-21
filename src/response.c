@@ -3,6 +3,7 @@
 #include "defs.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sys/sendfile.h>
@@ -35,11 +36,11 @@ int get_header(int conn, char buffer[]) {
 
 int handle_request(int cli_conn) {
     /* Initialize variables for reading the request */
-    // struct timeval tout = {10, 0};	/* Timeout structure: 3 mins */
     struct request req; /* Create our request structure */
     char header[MAX_HEADER_SIZE];
 
     /* Set the socket timeout */
+    // struct timeval tout = {10, 0};	/* Timeout structure: 3 mins */
     // setsockopt(cli_conn, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, 18);
 
     /* ---- Read the request and respond ------------------------------ */
@@ -57,9 +58,9 @@ receive:
     /* Populate our struct with request */
     if (parse_request(header, &req) < 0) {
         serve_status(cli_conn, req, 400);
-
         return 0;
     }
+    printf("%s: %s Host: %s Accept-Encoding: %s\n", req.method, req.url, req.host, req.cenc);
 
     /* Process the response with the correct method */
     switch (*req.method) {
@@ -103,6 +104,19 @@ int serve(int conn, struct request r) {
 		strcat(path, r.url);
 	}
 
+	/* Check for compressed version */
+	bool compressed = false;
+	if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
+		char cpath[MAX_PATH_SIZE];
+		strcpy(cpath, path);
+		strcat(cpath, ".gz");
+		if (access(cpath, F_OK) == 0) {
+			compressed = true;
+			strcpy(path, cpath);
+		}
+	}
+	printf("serving file %s\n", path);
+
 	/* Verify the connection and request version */
 	if (r.conn != NULL && (strcmp(r.conn, "Close") || r.version == 1)) {
 		closeconn = 1;
@@ -124,12 +138,20 @@ int serve(int conn, struct request r) {
 		"HTTP/%.1f %d %s\r\n"
 		"Server: " SERVER_NAME "\r\n"
 		"Date: %s\r\n"
-		"Connection: %s\r\n"
-		"Content-Type: %s\r\n"
-		"Content-Length: %d\r\n\r\n",
+		"Content-Length: %d\r\n",
 		r.version, status, status_text(status), date_line(),
-		conn_text(closeconn), mime_type(path), clen
-	 );
+		clen
+	);
+
+	if (compressed) {
+		/* remove .gz from path so the mimetype is correct */
+		path[strlen(path) - 3] = 0; 
+		dprintf(conn, "Content-Encoding: gzip\r\n");
+	}
+	if (closeconn) {
+		dprintf(conn, "Connection: Close\r\n");
+	}
+	dprintf(conn, "Content-Type: %s\r\n\r\n", mime_type(path));
 
 	if (clen && strcmp(r.method, "HEAD")) {
 		sendfile(conn, fileno(page_file), &(off_t){0}, clen);
