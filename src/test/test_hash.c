@@ -3,8 +3,8 @@
 
 int main(void) {
     char *exts[] = {".html", ".css",  ".json",   ".jpg",  ".js",  ".png",
-                    ".ico",  ".woff", ".svg",    ".jpeg", ".xml", "GET",
-                    "HEAD",  "POST",  "OPTIONS", NULL};
+                    ".ico",  ".woff", ".svg",    ".jpeg", ".xml", ".txt",
+		    "GET", "HEAD",  "POST",  "OPTIONS", NULL};
 
     puts("ext\thash");
     puts("------------");
