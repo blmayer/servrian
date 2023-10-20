@@ -119,7 +119,8 @@ int serve(int conn, struct request r) {
                         compression[0] = 'g';
                         strcpy(path, cpath);
                 }
-        } else if (r.cenc != NULL && strstr(r.cenc, "br")) {
+        }
+	if (r.cenc != NULL && strstr(r.cenc, "br")) {
                 char cpath[MAX_PATH_SIZE];
                 strcpy(cpath, path);
                 strcat(cpath, ".br");
