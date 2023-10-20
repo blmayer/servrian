@@ -111,23 +111,24 @@ int serve(int conn, struct request r) {
 
         /* Check for compressed version */
         char compression[1] = "";
-        if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
+        {
                 char cpath[MAX_PATH_SIZE];
-                strcpy(cpath, path);
-                strcat(cpath, ".gz");
-                if (access(cpath, F_OK) == 0) {
-                        compression[0] = 'g';
-                        strcpy(path, cpath);
+                if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
+                        strcpy(cpath, path);
+                        strcat(cpath, ".gz");
+                        if (access(cpath, F_OK) == 0) {
+                                compression[0] = 'g';
+                        }
                 }
-        }
-	if (r.cenc != NULL && strstr(r.cenc, "br")) {
-                char cpath[MAX_PATH_SIZE];
-                strcpy(cpath, path);
-                strcat(cpath, ".br");
-                if (access(cpath, F_OK) == 0) {
-                        compression[0] = 'b';
-                        strcpy(path, cpath);
+                if (r.cenc != NULL && strstr(r.cenc, "br")) {
+                        char cpath[MAX_PATH_SIZE];
+                        strcpy(cpath, path);
+                        strcat(cpath, ".br");
+                        if (access(cpath, F_OK) == 0) {
+                                compression[0] = 'b';
+                        }
                 }
+		strcpy(path, cpath);
         }
         printf("serving file %s\n", path);
 
