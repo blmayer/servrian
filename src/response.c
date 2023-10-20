@@ -110,7 +110,7 @@ int serve(int conn, struct request r) {
         }
 
         /* Check for compressed version */
-        char compression[1] = "";
+        char compression[1] = "n";
         {
                 char cpath[MAX_PATH_SIZE];
                 if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
@@ -121,14 +121,15 @@ int serve(int conn, struct request r) {
                         }
                 }
                 if (r.cenc != NULL && strstr(r.cenc, "br")) {
-                        char cpath[MAX_PATH_SIZE];
                         strcpy(cpath, path);
                         strcat(cpath, ".br");
                         if (access(cpath, F_OK) == 0) {
                                 compression[0] = 'b';
                         }
                 }
-		strcpy(path, cpath);
+                if (compression[0] != 'n') {
+                        strcpy(path, cpath);
+                }
         }
         printf("serving file %s\n", path);
 
