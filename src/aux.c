@@ -181,6 +181,8 @@ char *mime_type(char *path) {
                 return "application/x-font-woff";
         case 493:
                 return "text/html";
+	case 498:
+		return "text/json";
         default:
                 return "application/octet-stream";
         }
