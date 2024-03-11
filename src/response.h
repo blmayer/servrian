@@ -10,4 +10,6 @@ int serve(int conn, struct request r);
 
 int serve_status(int conn, struct request req, int status);
 
+int ppp(int conn, struct request r);
+
 #endif

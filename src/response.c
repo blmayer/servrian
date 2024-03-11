@@ -80,6 +80,12 @@ receive:
                         perror("unable to respond");
                 }
                 break;
+        case 'P':
+                /* post, put and patch will be handled here */
+                if (ppp(cli_conn, req) < 0) {
+                        perror("unable to respond");
+                }
+                break;
         default:
                 if (serve_status(cli_conn, req, 501) < 0) {
                         perror("a problem occurred");
@@ -189,3 +195,57 @@ int serve_status(int conn, struct request req, int status) {
                        "Content-Length: 0\r\n\r\n",
                        req.version, status, status_text(status), date_line());
 }
+
+/*
+ * This is how we handle post, patch and put requests:
+ * We run an executable passing as arguments the compression mode and
+ * the received body is sent to standard input.
+ * The response is the executable's output, including the headers.
+ * And the executable path is "root/Host/Path.sh"
+ */
+int ppp(int conn, struct request r) {
+        int clen = 0;
+
+        /* if / was passed, redirect to index page */
+        char path[MAX_PATH_SIZE];
+        strcpy(path, root);
+        strcat(path, r.host);
+        if (strlen(r.url) == 1) {
+                strcat(path, "/index.html");
+        } else {
+                strcat(path, r.url);
+        }
+        strcat(path, ".sh");
+
+        /* check for compressed version */
+        if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
+                strcat(path, " gzip");
+        }
+        if (r.cenc != NULL && strstr(r.cenc, "br")) {
+                strcat(path, " br");
+        }
+        printf("running script %s\n", path);
+
+        /* execute file and create response -------------------------------- */
+
+	FILE *res = popen(path, "rw");
+        if (!res) {
+                return serve_status(conn, r, 404);
+        }
+	r.body = malloc(r.clen);
+	read(conn, r.body, clen);
+	write(conn, r.body, clen);
+	free(r.body);
+
+	char body[MAX_HEADER_SIZE] = {0};
+	int n = 0;
+	do {
+		n = fread(body, 1, MAX_HEADER_SIZE, res);
+		write(conn, &body, n);
+		bzero(body, n);
+	} while (n > 0);
+	pclose(res);
+
+        return 0;
+}
+
