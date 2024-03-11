@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
         signal(SIGINT, sig_handler);
         signal(SIGKILL, sig_handler);
         signal(SIGSTOP, sig_handler);
-	signal(SIGCHLD, SIG_IGN);
+        signal(SIGCHLD, SIG_IGN);
 
         /* Initiate a TCP socket */
         server = socket(AF_INET, SOCK_STREAM, 0);

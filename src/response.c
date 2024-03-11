@@ -215,7 +215,8 @@ int ppp(int conn, struct request r) {
         } else {
                 strcat(path, r.url);
         }
-        strcat(path, ".sh");
+        strcat(path, ".sh ");
+        strcat(path, r.method);
 
         /* check for compressed version */
         if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
