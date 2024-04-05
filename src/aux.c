@@ -184,6 +184,6 @@ char *mime_type(char *path) {
 	case 498:
 		return "text/json";
         default:
-                return "application/octet-stream";
+                return "text/html";
         }
 }
