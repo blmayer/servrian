@@ -14,6 +14,8 @@
 #define CONN_CLOSE "Close"
 #define CONN_KEEPA "Keep-Alive"
 
+#define DEBUGF(args...) if (debug) {printf("[DEBUG] %s:%d: ", __FILE__, __LINE__); printf(args);}
+
 struct url {
 	char *proto;
 	char *ip;

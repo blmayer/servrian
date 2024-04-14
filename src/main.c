@@ -11,6 +11,7 @@
 
 int server;
 char root[MAX_PATH_SIZE];
+char debug = 0;
 
 void sig_handler() {
         puts("closing server");
@@ -19,6 +20,10 @@ void sig_handler() {
 }
 
 int main(int argc, char *argv[]) {
+	if (getenv("DEBUG")) {
+                debug = 1;
+        }
+
         int portnum = 8080;
 
         char *port = getenv("PORT");
@@ -61,6 +66,7 @@ int main(int argc, char *argv[]) {
                 return 0;
         }
 
+	DEBUGF("running in debug mode\n");
         printf("server is listening on port %d\n", portnum);
 
         /* Now we listen */
@@ -72,6 +78,7 @@ int main(int argc, char *argv[]) {
                 /* Get the new connection */
                 cli_len = sizeof(client);
                 conn = accept(server, (struct sockaddr *)&client, &cli_len);
+		DEBUGF("got a connection from %s\n", inet_ntoa(client.sin_addr));
 
                 /*  We got a connection! Check if it is OK */
                 if (conn < 0) {

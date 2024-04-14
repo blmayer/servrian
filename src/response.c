@@ -9,31 +9,26 @@
 #include <unistd.h>
 
 extern char root[MAX_PATH_SIZE];
+extern char debug;
 
 int get_header(int conn, char buffer[]) {
-        int pos = 0;
-        int n;
+        DEBUGF("reading request header\n");
+        int pos = 4;
 
-        /* This is a loop that will read the data coming from our connection */
-        do {
-                n = recv(conn, buffer + pos, MAX_HEADER_SIZE, 0);
-                if (n < 1) {
+        recv(conn, buffer, 4, 0);
+        while (strncmp(&buffer[pos - 4], "\r\n\r\n", 4)) {
+                if (recv(conn, buffer + pos, 1, 0) < 1) {
                         return -1;
                 }
-                pos += n;
-
-                /* The only thing that can break our loop is a blank line */
-                if (strncmp(&buffer[pos - 4], "\r\n\r\n", 4) == 0) {
-                        buffer[pos] = '\0';
-                        break;
-                }
-
-        } while (n > 0);
+                pos++;
+        }
+        buffer[pos] = '\0';
 
         return pos;
 }
 
 int handle_request(int cli_conn) {
+
         /* Initialize variables for reading the request */
         struct request req; /* Create our request structure */
         char header[MAX_HEADER_SIZE];
@@ -59,8 +54,6 @@ receive:
                 serve_status(cli_conn, req, 400);
                 return 0;
         }
-        printf("%s: %s Host: %s Accept-Encoding: %s\n", req.method, req.url,
-               req.host, req.cenc);
 
         /* some security checks */
         if (!req.host) {
@@ -71,6 +64,9 @@ receive:
             *req.host == '/') {
                 return serve_status(cli_conn, req, 400);
         }
+
+        printf("%s: %s Host: %s Accept-Encoding: %s Agent: %s\n", req.method,
+               req.url, req.host, req.cenc, req.user);
 
         /* Process the response with the correct method */
         switch (*req.method) {
@@ -101,6 +97,7 @@ receive:
 }
 
 int serve(int conn, struct request r) {
+        DEBUGF("handling GET request\n");
         int status = 200;
         int clen = 0;
         int closeconn = 0;
@@ -204,6 +201,7 @@ int serve_status(int conn, struct request req, int status) {
  * And the executable path is "root/Host/Path.sh"
  */
 int ppp(int conn, struct request r) {
+        DEBUGF("handling %s request\n", r.method);
         int clen = 0;
 
         /* if / was passed, redirect to index page */
@@ -229,24 +227,23 @@ int ppp(int conn, struct request r) {
 
         /* execute file and create response -------------------------------- */
 
-	FILE *res = popen(path, "rw");
+        FILE *res = popen(path, "rw");
         if (!res) {
                 return serve_status(conn, r, 404);
         }
-	r.body = malloc(r.clen);
-	read(conn, r.body, clen);
-	write(conn, r.body, clen);
-	free(r.body);
+        r.body = malloc(r.clen);
+        read(conn, r.body, clen);
+        write(conn, r.body, clen);
+        free(r.body);
 
-	char body[MAX_HEADER_SIZE] = {0};
-	int n = 0;
-	do {
-		n = fread(body, 1, MAX_HEADER_SIZE, res);
-		write(conn, &body, n);
-		bzero(body, n);
-	} while (n > 0);
-	pclose(res);
+        char body[MAX_HEADER_SIZE] = {0};
+        int n = 0;
+        do {
+                n = fread(body, 1, MAX_HEADER_SIZE, res);
+                write(conn, &body, n);
+                bzero(body, n);
+        } while (n > 0);
+        pclose(res);
 
         return 0;
 }
-

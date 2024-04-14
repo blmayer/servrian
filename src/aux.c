@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+extern char debug;
+
 int parse_URL(char *url, struct url *addr) {
         /* At first proto looks at the start of the URL */
         addr->proto = url;
@@ -54,12 +56,15 @@ int parse_URL(char *url, struct url *addr) {
 }
 
 int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
+	DEBUGF("parsing request\n");
+
         /* Get first line parameters */
         req->method = strtok(message, " "); /* First token is the method */
         if (req->method == NULL) {
                 puts("\tCould not parse the method.");
                 return -1;
         }
+	DEBUGF("parsed method %s\n", req->method);
 
         req->url = strtok(NULL, " "); /* Then the url or path */
         strtok(NULL, "/");            /* Advance to the version no */
@@ -75,8 +80,9 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
 
         /* Put pointer in next line */
         char *temp = strtok(NULL, "\r\n");
-
         while (temp != NULL) {
+		DEBUGF("parsing token %s\n", temp);
+
                 /* Keep advancing in string getting some parameters */
                 if (strncmp(temp, "Host: ", 6) == 0) {
                         req->host = temp + 6;
@@ -110,6 +116,7 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
                 }
                 temp = strtok(NULL, "\r\n");
         }
+	DEBUGF("parsed request\n");
 
         return 0;
 }
