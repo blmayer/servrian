@@ -213,14 +213,6 @@ int ppp(int conn, struct request r) {
                 strcat(path, r.url);
         }
         strcat(path, ".sh");
-
-        /* check for compressed version */
-        if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
-                strcat(path, " gzip");
-        }
-        if (r.cenc != NULL && strstr(r.cenc, "br")) {
-                strcat(path, " br");
-        }
         DEBUGF("running script %s\n", path);
 
         /* execute file and create response -------------------------------- */
@@ -241,7 +233,7 @@ int ppp(int conn, struct request r) {
                 close(inpipefd[0]);
 
                 // replace tee with your process
-                execl(path, path, r.method, (char *)NULL);
+                execl(path, path, r.method, r.cenc, (char *)NULL);
                 // Nothing below this line should be executed by child process.
                 // If so, it means that the execl function wasn't successfull,
                 // so lets exit:
