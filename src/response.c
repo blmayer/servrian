@@ -202,7 +202,6 @@ int serve_status(int conn, struct request req, int status) {
  */
 int ppp(int conn, struct request r) {
         DEBUGF("handling %s request\n", r.method);
-        int clen = 0;
 
         /* if / was passed, redirect to index page */
         char path[MAX_PATH_SIZE];
@@ -213,8 +212,7 @@ int ppp(int conn, struct request r) {
         } else {
                 strcat(path, r.url);
         }
-        strcat(path, ".sh ");
-        strcat(path, r.method);
+        strcat(path, ".sh");
 
         /* check for compressed version */
         if (r.cenc != NULL && strstr(r.cenc, "gzip")) {
@@ -223,27 +221,60 @@ int ppp(int conn, struct request r) {
         if (r.cenc != NULL && strstr(r.cenc, "br")) {
                 strcat(path, " br");
         }
-        printf("running script %s\n", path);
+        DEBUGF("running script %s\n", path);
 
         /* execute file and create response -------------------------------- */
+        pid_t pid = 0;
+        int inpipefd[2];
+        int outpipefd[2];
 
-        FILE *res = popen(path, "rw");
-        if (!res) {
-                return serve_status(conn, r, 404);
+        pipe(inpipefd);
+        pipe(outpipefd);
+        pid = fork();
+        if (pid == 0) {
+                // Child
+                dup2(outpipefd[0], STDIN_FILENO);
+                dup2(inpipefd[1], STDOUT_FILENO);
+                dup2(inpipefd[1], STDERR_FILENO);
+
+                // close unused pipe ends
+                close(outpipefd[1]);
+                close(inpipefd[0]);
+
+                // replace tee with your process
+                execl(path, path, r.method, (char *)NULL);
+                // Nothing below this line should be executed by child process.
+                // If so, it means that the execl function wasn't successfull,
+                // so lets exit:
+                exit(1);
         }
-        r.body = malloc(r.clen);
-        read(conn, r.body, clen);
-        write(conn, r.body, clen);
+        // The code below will be executed only by parent. You can write and
+        // read from the child using pipefd descriptors, and you can send
+        // signals to the process using its pid by kill() function. If the child
+        // process will exit unexpectedly, the parent process will obtain
+        // SIGCHLD signal that can be handled (e.g. you can respawn the child
+        // process).
+
+        // close unused pipe ends
+        close(outpipefd[0]);
+        close(inpipefd[1]);
+
+        r.body = malloc(r.clen + 1);
+        read(conn, r.body, r.clen);
+        r.body[r.clen] = 0;
+        write(outpipefd[1], r.body, r.clen);
+        DEBUGF("wrote %s to script\n", r.body);
         free(r.body);
 
         char body[MAX_HEADER_SIZE] = {0};
         int n = 0;
         do {
-                n = fread(body, 1, MAX_HEADER_SIZE, res);
+                n = read(inpipefd[0], &body, MAX_HEADER_SIZE);
+                DEBUGF("read %s from script\n", body);
                 write(conn, &body, n);
                 bzero(body, n);
         } while (n > 0);
-        pclose(res);
+	DEBUGF("script finished\n");
 
         return 0;
 }
