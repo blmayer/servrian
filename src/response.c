@@ -235,7 +235,6 @@ int ppp(int conn, struct request r) {
                 // Child
                 dup2(outpipefd[0], STDIN_FILENO);
                 dup2(inpipefd[1], STDOUT_FILENO);
-                dup2(inpipefd[1], STDERR_FILENO);
 
                 // close unused pipe ends
                 close(outpipefd[1]);
