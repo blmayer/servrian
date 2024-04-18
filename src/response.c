@@ -254,7 +254,7 @@ int ppp(int conn, struct request r) {
         read(conn, r.body, r.clen);
         r.body[r.clen] = 0;
         write(outpipefd[1], r.body, r.clen);
-	fsync(outpipefd[1]);
+        close(outpipefd[1]);
         DEBUGF("wrote %s to script\n", r.body);
         free(r.body);
 
@@ -266,6 +266,7 @@ int ppp(int conn, struct request r) {
                 write(conn, &body, n);
                 bzero(body, n);
         } while (n > 0);
+        close(inpipefd[0]);
 	DEBUGF("script finished\n");
 
         return 0;
