@@ -12,6 +12,8 @@
 int server;
 char root[MAX_PATH_SIZE];
 char debug = 0;
+uid_t hostuid;
+gid_t hostgid;
 
 void sig_handler() {
         puts("closing server");
@@ -42,6 +44,9 @@ int main(int argc, char *argv[]) {
         signal(SIGKILL, sig_handler);
         signal(SIGSTOP, sig_handler);
         signal(SIGCHLD, SIG_IGN);
+
+	hostuid = getuid();
+	hostgid = getgid();
 
         /* Initiate a TCP socket */
         server = socket(AF_INET, SOCK_STREAM, 0);

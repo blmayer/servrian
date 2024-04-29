@@ -1,15 +1,21 @@
 #include "response.h"
 #include "aux.h"
 #include "defs.h"
+#include <grp.h>
+#include <pwd.h>
+#include <shadow.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/sendfile.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 extern char root[MAX_PATH_SIZE];
 extern char debug;
+extern uid_t hostuid;
+extern gid_t hostgid;
 
 int get_header(int conn, char buffer[]) {
         DEBUGF("reading request header\n");
@@ -51,18 +57,18 @@ receive:
 
         /* populate our struct with request */
         if (parse_request(header, &req) < 0) {
-                serve_status(cli_conn, req, 400);
+                serve_status(cli_conn, req, 400, "");
                 return 0;
         }
 
         /* some security checks */
         if (!req.host) {
-                return serve_status(cli_conn, req, 400);
+                return serve_status(cli_conn, req, 400, "");
         }
 
         if (strstr(req.url, "..") || strstr(req.host, "..") ||
             *req.host == '/') {
-                return serve_status(cli_conn, req, 400);
+                return serve_status(cli_conn, req, 400, "");
         }
 
         printf("%s: %s Host: %s Accept-Encoding: %s Agent: %s\n", req.method,
@@ -83,7 +89,7 @@ receive:
                 }
                 break;
         default:
-                if (serve_status(cli_conn, req, 501) < 0) {
+                if (serve_status(cli_conn, req, 501, "") < 0) {
                         perror("a problem occurred");
                 }
         }
@@ -143,9 +149,51 @@ int serve(int conn, struct request r) {
 
         /* Read file and create response ---------------------------------- */
 
+        struct stat stats;
+        if (stat(path, &stats) < 0) {
+                return serve_status(conn, r, 404, "");
+        }
+
+        /* check permissions */
+        if (!(stats.st_mode & S_IROTH)) {
+                puts("file needs authorization");
+                if (!r.auth || strncmp(r.auth, "Basic", 5)) {
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                r.auth += 6;
+                char userpass[MAX_PATH_SIZE];
+                base64_decode(r.auth, userpass);
+                char *user = strtok(userpass, ":");
+                char *pass = strtok(NULL, ":");
+
+                /* check passwd */
+                struct passwd *pw = getpwnam(user);
+                if (!pw) {
+                        puts("getpwnam error");
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                int res = pw_check(pw, pass);
+		if (res <= 0) {
+                        printf("password didn't check: %d", res);
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                if (setgid(pw->pw_gid) < 0)
+                        return serve_status(conn, r, 500, "");
+                if (setuid(pw->pw_uid) < 0)
+                        return serve_status(conn, r, 500, "");
+
+                printf("%s authorized\n", user);
+        }
+
         FILE *page_file = fopen(path, "rb");
         if (page_file == NULL) {
-                return serve_status(conn, r, 404);
+                return serve_status(conn, r, 404, "");
         } else {
                 fseek(page_file, 0, SEEK_END); /* Seek to the end */
                 clen = ftell(page_file);       /* This position's the size */
@@ -180,17 +228,22 @@ int serve(int conn, struct request r) {
         }
         fclose(page_file);
 
+        setuid(hostuid);
+        setgid(hostgid);
+
         return 0;
 }
 
-int serve_status(int conn, struct request req, int status) {
+int serve_status(int conn, struct request req, int status, char *extra) {
         return dprintf(conn,
                        "HTTP/%.1f %d %s\r\n"
                        "Server: " SERVER_NAME "\r\n"
                        "Date: %s\r\n"
+                       "%s"
                        "Connection: Close\r\n"
                        "Content-Length: 0\r\n\r\n",
-                       req.version, status, status_text(status), date_line());
+                       req.version, status, status_text(status), date_line(),
+                       extra);
 }
 
 /*
@@ -215,7 +268,8 @@ int ppp(int conn, struct request r) {
         strcat(path, ".sh");
         DEBUGF("running script %s\n", path);
 
-        /* execute file and create response -------------------------------- */
+        /* execute file and create response
+         * -------------------------------- */
         pid_t pid = 0;
         int inpipefd[2];
         int outpipefd[2];
@@ -234,17 +288,17 @@ int ppp(int conn, struct request r) {
 
                 // replace tee with your process
                 execl(path, path, r.method, r.cenc, (char *)NULL);
-                // Nothing below this line should be executed by child process.
-                // If so, it means that the execl function wasn't successfull,
-                // so lets exit:
+                // Nothing below this line should be executed by child
+                // process. If so, it means that the execl function
+                // wasn't successfull, so lets exit:
                 exit(1);
         }
-        // The code below will be executed only by parent. You can write and
-        // read from the child using pipefd descriptors, and you can send
-        // signals to the process using its pid by kill() function. If the child
-        // process will exit unexpectedly, the parent process will obtain
-        // SIGCHLD signal that can be handled (e.g. you can respawn the child
-        // process).
+        // The code below will be executed only by parent. You can write
+        // and read from the child using pipefd descriptors, and you can
+        // send signals to the process using its pid by kill() function.
+        // If the child process will exit unexpectedly, the parent
+        // process will obtain SIGCHLD signal that can be handled (e.g.
+        // you can respawn the child process).
 
         // close unused pipe ends
         close(outpipefd[0]);
@@ -267,7 +321,7 @@ int ppp(int conn, struct request r) {
                 bzero(body, n);
         } while (n > 0);
         close(inpipefd[0]);
-	DEBUGF("script finished\n");
+        DEBUGF("script finished\n");
 
         return 0;
 }

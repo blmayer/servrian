@@ -10,6 +10,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <pwd.h>
 #include "defs.h"
 
 int hash(char *str);
@@ -25,5 +26,9 @@ char *status_text(short status);
 char *conn_text(int closeconn);
 
 char *mime_type(char *ext);
+
+int base64_decode(char *src, char dest[MAX_PATH_SIZE]);
+
+int pw_check(struct passwd *pw, char *pass);
 
 #endif

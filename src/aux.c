@@ -1,6 +1,9 @@
 #include "aux.h"
 #include "defs.h"
+#include <pwd.h>
+#include <shadow.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -56,7 +59,7 @@ int parse_URL(char *url, struct url *addr) {
 }
 
 int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
-	DEBUGF("parsing request\n");
+        DEBUGF("parsing request\n");
 
         /* Get first line parameters */
         req->method = strtok(message, " "); /* First token is the method */
@@ -64,7 +67,7 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
                 puts("\tCould not parse the method.");
                 return -1;
         }
-	DEBUGF("parsed method %s\n", req->method);
+        DEBUGF("parsed method %s\n", req->method);
 
         req->url = strtok(NULL, " "); /* Then the url or path */
         strtok(NULL, "/");            /* Advance to the version no */
@@ -81,7 +84,7 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
         /* Put pointer in next line */
         char *temp = strtok(NULL, "\r\n");
         while (temp != NULL) {
-		DEBUGF("parsing token %s\n", temp);
+                DEBUGF("parsing token %s\n", temp);
 
                 /* Keep advancing in string getting some parameters */
                 if (strncmp(temp, "Host: ", 6) == 0) {
@@ -91,6 +94,11 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
                 }
                 if (strncmp(temp, "User-Agent: ", 12) == 0) {
                         req->user = temp + 12;
+                        temp = strtok(NULL, "\r\n");
+                        continue;
+                }
+                if (strncmp(temp, "Authorization: ", 15) == 0) {
+                        req->auth = temp + 15;
                         temp = strtok(NULL, "\r\n");
                         continue;
                 }
@@ -116,7 +124,7 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
                 }
                 temp = strtok(NULL, "\r\n");
         }
-	DEBUGF("parsed request\n");
+        DEBUGF("parsed request\n");
 
         return 0;
 }
@@ -153,6 +161,8 @@ char *status_text(short status) {
                 return STATUS_200;
         case 400:
                 return STATUS_400;
+        case 401:
+                return STATUS_401;
         case 404:
                 return STATUS_404;
         case 500:
@@ -188,9 +198,93 @@ char *mime_type(char *path) {
                 return "application/x-font-woff";
         case 493:
                 return "text/html";
-	case 498:
-		return "text/json";
+        case 498:
+                return "text/json";
         default:
                 return "text/html";
         }
+}
+
+static const char table[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+int isbase64(char c) { return c && strchr(table, c) != NULL; }
+
+char value(char c) {
+        const char *p = strchr(table, c);
+        if (p) {
+                return p - table;
+        } else {
+                return 0;
+        }
+}
+
+int base64_decode(char *src, char dest[MAX_PATH_SIZE]) {
+        if (*src == 0) {
+                return 0;
+        }
+        int srclen = strlen(src);
+
+        char *p = dest;
+        do {
+
+                char a = value(src[0]);
+                char b = value(src[1]);
+                char c = value(src[2]);
+                char d = value(src[3]);
+                *p++ = (a << 2) | (b >> 4);
+                *p++ = (b << 4) | (c >> 2);
+                *p++ = (c << 6) | d;
+                if (!isbase64(src[1])) {
+                        p -= 2;
+                        break;
+                } else if (!isbase64(src[2])) {
+                        p -= 2;
+                        break;
+                } else if (!isbase64(src[3])) {
+                        p--;
+                        break;
+                }
+                src += 4;
+                while (*src && (*src == 13 || *src == 10))
+                        src++;
+        } while (srclen -= 4);
+        *p = 0;
+        return p - dest;
+}
+
+int pw_check(struct passwd *pw, char *pass) {
+        char *cryptpass, *p;
+        struct spwd *spw;
+
+        p = pw->pw_passwd;
+        if (p[0] == '!' || p[0] == '*') {
+                return errno;
+        }
+
+        if (pw->pw_passwd[0] == '\0') {
+                if (pass[0] == '\0')
+                        return 1;
+                return 0;
+        }
+
+        if (pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0') {
+                spw = getspnam(pw->pw_name);
+                if (!spw) {
+                        return errno;
+                }
+                p = spw->sp_pwdp;
+                if (p[0] == '!' || p[0] == '*') {
+                        return errno;
+                }
+        }
+
+        cryptpass = crypt(pass, p);
+        if (!cryptpass) {
+                return errno;
+        }
+        if (strcmp(cryptpass, p) != 0) {
+                return 0;
+        }
+        return 1;
 }

@@ -7,6 +7,7 @@
 
 #define STATUS_200 "OK"
 #define STATUS_400 "Bad Request"
+#define STATUS_401 "Unauthorized"
 #define STATUS_404 "Not Found"
 #define STATUS_500 "Internal Server Error"
 #define STATUS_501 "Not Implemented"
@@ -48,6 +49,7 @@ struct request {
 	float version;
 	char *host;
 	char *conn;
+	char *auth;
 	char *user;
 	char *cenc;
 	char *ctype;

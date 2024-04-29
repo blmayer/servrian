@@ -8,7 +8,7 @@ int handle_request(int cli_conn);
 
 int serve(int conn, struct request r);
 
-int serve_status(int conn, struct request req, int status);
+int serve_status(int conn, struct request req, int status, char *extra);
 
 int ppp(int conn, struct request r);
 
