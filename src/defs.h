@@ -1,7 +1,7 @@
 #ifndef DEFS
 #define DEFS
 
-#define SERVER_NAME "Servrian v2.3.0"
+#define SERVER_NAME "Servrian v2.4.0"
 #define MAX_HEADER_SIZE 8*1024
 #define MAX_PATH_SIZE 256
 
