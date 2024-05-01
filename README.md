@@ -15,6 +15,8 @@
 
 ## Dependencies
 
+- Crypt;
+- Shadow;
 - A C compiler; &
 - make.
 
@@ -45,12 +47,25 @@ compressed file is sent.
 
 For POST, PUT and PATCH requests it is also added _.sh_ at end and the file
 is executed, passing the method and the content encoding to the callee. The
-body is send to standard input, the output generated is directly sent as
+body is sent to standard input, the output generated is directly sent as
 response, so programs are responsible for the correct response, including
 headers.
 
 Beware that this is a experimental feature and may contain bugs and security
 issues. Use with care.
+
+
+### Authorization
+
+Servrian leverages unix tools to handle authorization and authentication, for
+most cases it should work out of the box. Whenever a file requested is not
+publicly readable, this is, the file doesn't have the `a+r` flag, then servrian
+checks for the *Authorization* HTTP header, if present it is used to authorize
+using your system's */etc/passwd* file, the same way you login into your shell.
+
+If the header is not present status 401 is returned with a `WWW-Authenticate`
+header, only the *Basic* method is supported now. For shadow passwords your
+user must have read access to the shadow file.
 
 
 # Meta
