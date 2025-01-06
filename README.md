@@ -5,12 +5,13 @@
 
 ## Features
 
-- Fast
+- Fast and small
 - Uses the linux sendfile to avoid buffering
 - Low memory footprint and very few allocations
 - Supports POST, PUT and PATCH by executing files
-- Uses only the standard library
-- Protection agains ../ path attacks
+- Protection against ../ path attacks
+- Only 18Kb when striped
+- Vetted with valgrind
 
 
 ## Dependencies
