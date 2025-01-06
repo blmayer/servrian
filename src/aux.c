@@ -180,6 +180,8 @@ char *mime_type(char *path) {
         switch (hash(strrchr(path, '.'))) {
         case 270:
                 return "application/javascript";
+        case 366:
+                return "application/pdf";
         case 367:
                 return "image/x-icon";
         case 377:

@@ -18,8 +18,8 @@ clean:
 test: test_hash
 	./bin/$<
 
-test_hash: src/test/test_hash.c src/aux.c
-	$(CC) $(CFLAGS) $^ -o bin/$@
+test_hash: src/test/test_hash.o src/aux.o
+	$(CC) $(CFLAGS) $^ -o bin/$@ -lcrypt
 
 debug:
 	$(MAKE) CFLAGS="$(CFLAGS) -fsanitize=address" servrian
