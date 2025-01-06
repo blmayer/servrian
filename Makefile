@@ -3,7 +3,7 @@ CFLAGS=-g -O0 -Wall -Wextra -fsanitize=address -fsanitize=bounds
 
 servrian: $(patsubst %.c,%.o,$(wildcard src/*.c))
 	[ -e bin ] || mkdir bin
-	$(CC) $(CFLAGS) $^ -o bin/$@
+	$(CC) $(CFLAGS) $^ -o bin/$@ -lcrypt
 
 release:
 	$(MAKE) CFLAGS="-Ofast -static" servrian
