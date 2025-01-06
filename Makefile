@@ -6,7 +6,7 @@ servrian: $(patsubst %.c,%.o,$(wildcard src/*.c))
 	$(CC) $(CFLAGS) $^ -o bin/$@ -lcrypt
 
 release:
-	$(MAKE) CFLAGS="-Ofast -static" servrian
+	$(MAKE) CFLAGS="-Ofast" servrian
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
