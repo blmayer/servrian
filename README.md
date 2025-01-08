@@ -19,16 +19,16 @@
 - Crypt;
 - Shadow;
 - A C compiler; &
-- make.
+- A POSIX compatible shell.
 
 
 ## Compiling 
 
 Simply run:
 
-`make`
+`./build`
 
-To install `make install` will copy the executable to `.local/bin/`.
+To install `./build install` will copy the executable to `.local/bin/`.
 
 
 ## Running

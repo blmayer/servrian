@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# Set default values for variables
+CFLAGS="-g -O0 -Wall -Wextra -fsanitize=address -fsanitize=bounds"
+BIN_DIR="bin"
+SRC_DIR="src"
+TEST_DIR="src/test"
+
+# Create the bin directory if it doesn't exist
+create_bin_dir() {
+    [ -d "$BIN_DIR" ] || mkdir "$BIN_DIR"
+}
+
+# Build object files from all source files in the source directory
+build_objects() {
+    for src_file in "$SRC_DIR"/*.c; do
+        obj_file=$(basename "$src_file" .c).o
+        cc $CFLAGS -c "$src_file" -o "$obj_file"
+    done
+}
+
+# Build the servrian executable
+build_servrian() {
+    create_bin_dir
+    build_objects
+    cc $CFLAGS -o "$BIN_DIR/servrian" -lcrypt ./*.o
+}
+
+# Build the test_hash executable
+build_test_hash() {
+    create_bin_dir
+    cc $CFLAGS "$TEST_DIR/test_hash.c" "$SRC_DIR/aux.c" -o "$BIN_DIR/test_hash" -lcrypt
+}
+
+# Clean build artifacts
+clean() {
+    rm -f ./*.o
+    rm -rf "$BIN_DIR/*"
+}
+
+# Debug build
+debug() {
+    export CFLAGS="$CFLAGS -fsanitize=address"
+    build_servrian
+    "$BIN_DIR/servrian"
+}
+
+# Compile the project based on the target
+main() {
+    case $1 in
+        servrian)
+            build_servrian
+            ;;
+        release)
+            export CFLAGS="-Ofast"
+            main servrian
+            ;;
+        clean)
+            clean
+            ;;
+        test)
+            main test_hash
+            "$BIN_DIR/test_hash"
+            ;;
+        test_hash)
+            build_test_hash
+            ;;
+        debug)
+            debug
+            ;;
+        "" | *)
+            echo "No target specified. Defaulting to 'release'."
+            main release
+            ;;
+    esac
+}
+
+main "$@"
+
