@@ -62,12 +62,7 @@ receive:
         }
 
         /* some security checks */
-        if (!req.host) {
-                return serve_status(cli_conn, req, 400, "");
-        }
-
-        if (strstr(req.url, "..") || strstr(req.host, "..") ||
-            *req.host == '/') {
+        if (invalid_path(req.host) || invalid_path(req.url)) {
                 return serve_status(cli_conn, req, 400, "");
         }
 
@@ -268,8 +263,7 @@ int ppp(int conn, struct request r) {
         strcat(path, ".sh");
         DEBUGF("running script %s\n", path);
 
-        /* execute file and create response
-         * -------------------------------- */
+        /* execute file and create response */
         pid_t pid = 0;
         int inpipefd[2];
         int outpipefd[2];
@@ -286,17 +280,17 @@ int ppp(int conn, struct request r) {
                 close(outpipefd[1]);
                 close(inpipefd[0]);
 
-                // replace tee with your process
                 execl(path, path, r.method, r.cenc, (char *)NULL);
                 // Nothing below this line should be executed by child
                 // process. If so, it means that the execl function
                 // wasn't successfull, so lets exit:
                 exit(1);
         }
+
         // The code below will be executed only by parent. You can write
         // and read from the child using pipefd descriptors, and you can
         // send signals to the process using its pid by kill() function.
-        // If the child process will exit unexpectedly, the parent
+        // If the child process exit unexpectedly, the parent
         // process will obtain SIGCHLD signal that can be handled (e.g.
         // you can respawn the child process).
 

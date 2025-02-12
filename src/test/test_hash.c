@@ -1,7 +1,7 @@
+char debug = 1;
 #include "../aux.h"
 #include <stdio.h>
 
-char debug = 1;
 
 int main(void) {
 	char *exts[] = {
@@ -10,9 +10,11 @@ int main(void) {
 		"GET", "HEAD",  "POST",  "OPTIONS", NULL
 	};
 
-	puts("ext\thash");
-	puts("------------");
+	puts("+-----------+-----------+");
+	puts("|    ext\thash    |");
+	puts("+-----------+-----------+");
 	for (int i = 0; exts[i]; i++) {
-		printf("%s\t%d\n", exts[i], hash(exts[i]));
+		printf("| %*s\t%d\t|\n", 8, exts[i], hash(exts[i]));
 	}
+	puts("+-----------------------+");
 }

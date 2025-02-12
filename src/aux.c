@@ -10,6 +10,10 @@
 
 extern char debug;
 
+int invalid_path(char *path) {
+	return path || strstr(path, "..") || *path == '/' || *path == '.' || *path == '~';
+}
+
 int parse_URL(char *url, struct url *addr) {
         /* At first proto looks at the start of the URL */
         addr->proto = url;

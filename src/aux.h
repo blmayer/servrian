@@ -13,6 +13,8 @@
 #include <pwd.h>
 #include "defs.h"
 
+int invalid_path(char *path);
+
 int hash(char *str);
 
 int parse_request(char message[MAX_HEADER_SIZE], struct request *req);
