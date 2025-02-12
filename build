@@ -13,8 +13,10 @@ create_bin_dir() {
 
 # Build object files from all source files in the source directory
 build_objects() {
-    for src_file in "$SRC_DIR"/*.c; do
+    for src_file in "$SRC_DIR"/*.c
+    do
         obj_file=$(basename "$src_file" .c).o
+        echo "cc $CFLAGS -c "$src_file" -o "$obj_file""
         cc $CFLAGS -c "$src_file" -o "$obj_file"
     done
 }
@@ -23,6 +25,7 @@ build_objects() {
 build_servrian() {
     create_bin_dir
     build_objects
+    echo "cc $CFLAGS -o "$BIN_DIR/servrian" -lcrypt ./*.o"
     cc $CFLAGS -o "$BIN_DIR/servrian" -lcrypt ./*.o
 }
 

@@ -184,6 +184,9 @@ char *mime_type(char *path) {
                 return "application/pdf";
         case 367:
                 return "image/x-icon";
+	case 373:
+	case 478:
+                return "image/jpeg";
         case 377:
                 return "image/png";
         case 381:

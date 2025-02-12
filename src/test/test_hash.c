@@ -13,6 +13,6 @@ int main(void) {
 	puts("ext\thash");
 	puts("------------");
 	for (int i = 0; exts[i]; i++) {
-	printf("%s\t%d\n", exts[i], hash(exts[i]));
+		printf("%s\t%d\n", exts[i], hash(exts[i]));
 	}
 }
