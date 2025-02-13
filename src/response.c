@@ -61,13 +61,13 @@ receive:
                 return 0;
         }
 
+        printf("method=%s url=%s Host=%s Accept-Encoding=%s Agent=%s\n", req.method,
+               req.url, req.host, req.cenc, req.user);
+
         /* some security checks */
         if (invalid_host(req.host) || invalid_path(req.url)) {
                 return serve_status(cli_conn, req, 400, "");
         }
-
-        printf("%s: %s Host: %s Accept-Encoding: %s Agent: %s\n", req.method,
-               req.url, req.host, req.cenc, req.user);
 
         /* Process the response with the correct method */
         switch (*req.method) {

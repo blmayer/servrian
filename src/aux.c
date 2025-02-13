@@ -12,11 +12,11 @@
 extern char debug;
 
 int invalid_path(char *path) {
-	return path || strstr(path, "..") || *path == '.' || *path == '~';
+	return !path || !*path || strstr(path, "..") || *path == '.' || *path == '~';
 }
 
 int invalid_host(char *path) {
-	return path || strstr(path, "..") || *path == '/' || *path == '.' || *path == '~';
+	return !path || !*path || strstr(path, "..") || *path == '/' || *path == '.' || *path == '~';
 }
 
 int parse_URL(char *url, struct url *addr) {
