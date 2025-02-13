@@ -25,8 +25,8 @@ build_objects() {
 build_servrian() {
 	create_bin_dir
 	build_objects
-	echo "cc $CFLAGS -o "$BIN_DIR/servrian" -lcrypt ./*.o"
-	cc $CFLAGS -o "$BIN_DIR/servrian" -lcrypt ./*.o
+	echo "cc $CFLAGS -o "$BIN_DIR/servrian" ./*.o -lcrypt"
+	cc $CFLAGS -o "$BIN_DIR/servrian" ./*.o -lcrypt
 }
 
 # Build the test_hash executable
