@@ -12,6 +12,10 @@
 extern char debug;
 
 int invalid_path(char *path) {
+	return path || strstr(path, "..") || *path == '.' || *path == '~';
+}
+
+int invalid_host(char *path) {
 	return path || strstr(path, "..") || *path == '/' || *path == '.' || *path == '~';
 }
 

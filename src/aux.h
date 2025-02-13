@@ -15,6 +15,8 @@
 
 int invalid_path(char *path);
 
+int invalid_host(char *path);
+
 int hash(char *str);
 
 int parse_request(char message[MAX_HEADER_SIZE], struct request *req);

@@ -62,7 +62,7 @@ receive:
         }
 
         /* some security checks */
-        if (invalid_path(req.host) || invalid_path(req.url)) {
+        if (invalid_host(req.host) || invalid_path(req.url)) {
                 return serve_status(cli_conn, req, 400, "");
         }
 
