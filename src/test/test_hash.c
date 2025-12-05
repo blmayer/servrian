@@ -6,7 +6,7 @@ char debug = 1;
 int main(void) {
 	char *exts[] = {
 		".html", ".css",  ".json",   ".jpg",  ".js",  ".png", ".pdf",
-                ".ico",  ".woff", ".svg",    ".jpeg", ".xml", ".txt",
+                ".ico",  ".woff", ".svg",    ".jpeg", ".xml", ".txt", ".mp4",
 		"GET", "HEAD",  "POST",  "OPTIONS", NULL
 	};
 

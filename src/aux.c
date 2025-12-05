@@ -1,22 +1,24 @@
 #include "aux.h"
 #include "defs.h"
+#include <crypt.h>
+#include <errno.h>
 #include <pwd.h>
 #include <shadow.h>
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <crypt.h>
 
 extern char debug;
 
 int invalid_path(char *path) {
-	return !path || !*path || strstr(path, "..") || *path == '.' || *path == '~';
+        return !path || !*path || strstr(path, "..") || *path == '.' ||
+               *path == '~';
 }
 
 int invalid_host(char *path) {
-	return !path || !*path || strstr(path, "..") || *path == '/' || *path == '.' || *path == '~';
+        return !path || !*path || strstr(path, "..") || *path == '/' ||
+               *path == '.' || *path == '~';
 }
 
 int parse_URL(char *url, struct url *addr) {
@@ -189,12 +191,14 @@ char *mime_type(char *path) {
         switch (hash(strrchr(path, '.'))) {
         case 270:
                 return "application/javascript";
+        case 325:
+                return "video/mp4";
         case 366:
                 return "application/pdf";
         case 367:
                 return "image/x-icon";
-	case 373:
-	case 478:
+        case 373:
+        case 478:
                 return "image/jpeg";
         case 377:
                 return "image/png";
