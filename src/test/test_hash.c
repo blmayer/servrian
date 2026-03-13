@@ -7,7 +7,7 @@ int main(void) {
 	char *exts[] = {
 		".html", ".css",  ".json",   ".jpg",  ".js",  ".png", ".pdf",
                 ".ico",  ".woff", ".svg",    ".jpeg", ".xml", ".txt", ".mp4",
-		"GET", "HEAD",  "POST",  "OPTIONS", NULL
+		".pack", ".idx", "GET", "HEAD",  "POST",  "OPTIONS", NULL
 	};
 
 	puts("+-----------+-----------+");

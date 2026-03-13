@@ -141,14 +141,12 @@ int parse_request(char message[MAX_HEADER_SIZE], struct request *req) {
 }
 
 int hash(char *str) {
-        int res = 0;
-        int pos = 0;
-
-        while (str[pos]) {
-                res += str[pos] + pos;
-                pos++;
+        unsigned int hash = 5381;
+        int c;
+        while ((c = *str++)) {
+                hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
         }
-        return res;
+        return (int)hash;
 }
 
 /* Header processing tools */
@@ -189,35 +187,37 @@ char *conn_text(int closeconn) { return closeconn ? CONN_CLOSE : CONN_KEEPA; }
 
 char *mime_type(char *path) {
         switch (hash(strrchr(path, '.'))) {
-        case 270:
-                return "application/javascript";
-        case 325:
-                return "video/mp4";
-        case 366:
-                return "application/pdf";
-        case 367:
-                return "image/x-icon";
-        case 373:
-        case 478:
-                return "image/jpeg";
-        case 377:
-                return "image/png";
-        case 381:
-                return "text/css";
-        case 388:
-                return "image/svg+xml";
-        case 389:
-                return "text/xml";
-        case 395:
-                return "text/xsl";
-        case 404:
-                return "text/plain";
-        case 490:
-                return "application/x-font-woff";
-        case 493:
+        case 192572072: /* .html */
                 return "text/html";
-        case 498:
+        case 2088238428: /* .css */
+                return "text/css";
+        case 192642925: /* .json */
                 return "text/json";
+        case 2088245940: /* .jpg */
+        case 192639321: /* .jpeg */
+                return "image/jpeg";
+        case 193430704: /* .js */
+                return "application/javascript";
+        case 2088252408: /* .png */
+                return "image/png";
+        case 2088252077: /* .pdf */
+                return "application/pdf";
+        case 2088244430: /* .ico */
+                return "image/x-icon";
+        case 193105445: /* .woff */
+                return "application/x-font-woff";
+        case 2088255939: /* .svg */
+                return "image/svg+xml";
+        case 2088261092: /* .xml */
+                return "text/xml";
+        case 2088257107: /* .txt */
+                return "text/plain";
+        case 2088249156: /* .mp4 */
+                return "video/mp4";
+        case 192838546: /* .pack */
+                return "application/x-git-packed-objects";
+        case 2088244472: /* .idx */
+                return "application/octet-stream";
         default:
                 return "text/html";
         }
