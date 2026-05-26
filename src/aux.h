@@ -31,7 +31,8 @@ char *conn_text(int closeconn);
 
 char *mime_type(char *ext);
 
-int base64_decode(char *src, char dest[MAX_PATH_SIZE]);
+/* Safe base64 decode. Returns number of bytes written, or -1 on error/overflow. */
+int base64_decode(char *src, char *dest, size_t dest_size);
 
 int pw_check(struct passwd *pw, char *pass);
 

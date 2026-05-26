@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "response.h"
 #include <arpa/inet.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,10 +16,21 @@ char debug = 0;
 uid_t hostuid;
 gid_t hostgid;
 
+volatile sig_atomic_t active_conns = 0;
+
 void sig_handler() {
         puts("closing server");
         close(server);
         exit(1);
+}
+
+void sigchld_handler(int sig) {
+        int saved_errno = errno;
+        while (waitpid(-1, NULL, WNOHANG) > 0) {
+                if (active_conns > 0)
+                        active_conns--;
+        }
+        errno = saved_errno;
 }
 
 int main(int argc, char *argv[]) {
@@ -30,7 +42,13 @@ int main(int argc, char *argv[]) {
 
         char *port = getenv("PORT");
         if (port != NULL) {
-                portnum = atoi(port);
+                char *endptr = NULL;
+                long p = strtol(port, &endptr, 10);
+                if (*endptr == '\0' && p > 0 && p <= 65535) {
+                        portnum = (int)p;
+                } else {
+                        fprintf(stderr, "Invalid PORT value '%s', falling back to 8080\n", port);
+                }
         }
 
         for (int i = 1; i < argc; i++) {
@@ -43,7 +61,7 @@ int main(int argc, char *argv[]) {
         signal(SIGINT, sig_handler);
         signal(SIGKILL, sig_handler);
         signal(SIGSTOP, sig_handler);
-        signal(SIGCHLD, SIG_IGN);
+        signal(SIGCHLD, sigchld_handler);
 
 	hostuid = getuid();
 	hostgid = getgid();
@@ -91,12 +109,22 @@ int main(int argc, char *argv[]) {
                         continue;
                 }
 
+                /* Global concurrent connection limit */
+                if (active_conns >= MAX_CONCURRENT_CONNECTIONS) {
+                        close(conn);
+                        continue;
+                }
+                active_conns++;
+
                 /* Fork the connection */
                 pid_t conn_pid = fork();
 
                 /* Manipulate those processes */
                 if (conn_pid < 0) {
                         perror("couldn't fork");
+                        active_conns--;   /* fork failed, roll back counter */
+                        close(conn);
+                        continue;
                 }
 
                 if (conn_pid == 0) {

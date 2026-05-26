@@ -4,6 +4,9 @@
 #define SERVER_NAME "Servrian v2.4.1"
 #define MAX_HEADER_SIZE 8*1024
 #define MAX_PATH_SIZE 256
+#define MAX_BODY_SIZE (1 * 1024 * 1024)   /* 1 MiB - hard limit on request bodies */
+
+#define MAX_CONCURRENT_CONNECTIONS 128    /* Global hard limit on active connections */
 
 #define STATUS_200 "OK"
 #define STATUS_400 "Bad Request"

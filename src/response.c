@@ -17,19 +17,86 @@ extern char debug;
 extern uid_t hostuid;
 extern gid_t hostgid;
 
-int get_header(int conn, char buffer[]) {
-        DEBUGF("reading request header\n");
-        int pos = 4;
+/* Connection-level timeout (applies to both reading requests and writing responses) */
+#define CONNECTION_TIMEOUT_SEC 30
 
-        recv(conn, buffer, 4, 0);
-        while (strncmp(&buffer[pos - 4], "\r\n\r\n", 4)) {
+/* Defense-in-depth: canonical root for path escape prevention */
+static char canonical_root[MAX_PATH_SIZE] = {0};
+static int   canonical_root_len = 0;
+
+static void init_canonical_root(void) {
+    if (canonical_root_len == 0) {
+        if (realpath(root, canonical_root) != NULL) {
+            canonical_root_len = strlen(canonical_root);
+            /* Ensure it ends with / for easy prefix matching */
+            if (canonical_root_len > 0 && canonical_root[canonical_root_len-1] != '/') {
+                if (canonical_root_len + 1 < MAX_PATH_SIZE) {
+                    strcat(canonical_root, "/");
+                    canonical_root_len++;
+                }
+            }
+        } else {
+            /* Fallback: use the raw root */
+            strncpy(canonical_root, root, MAX_PATH_SIZE - 1);
+            canonical_root[MAX_PATH_SIZE - 1] = 0;
+            canonical_root_len = strlen(canonical_root);
+        }
+    }
+}
+
+/* Returns 1 if the candidate path is safely under the web root.
+ * Uses realpath() for defense-in-depth against traversal and symlink attacks.
+ */
+static int path_is_safe(const char *candidate, char *resolved, size_t resolved_size) {
+    init_canonical_root();
+
+    if (realpath(candidate, resolved) == NULL) {
+        /* File/directory does not exist.
+         * For non-existing paths we still want to prevent obvious escapes.
+         * A conservative approach: if the raw candidate contains ".." after
+         * our earlier checks, reject. Since we already ran invalid_path(),
+         * we can be lenient here and let the caller return 404.
+         */
+        return 1;   // Let later stat()/fopen() produce 404
+    }
+
+    /* Check that the resolved path starts with our canonical root */
+    if (strncmp(resolved, canonical_root, canonical_root_len) != 0) {
+        return 0;   // Escape attempt or symlink outside root
+    }
+
+    return 1;
+}
+
+int get_header(int conn, char buffer[], size_t max_size) {
+        DEBUGF("reading request header\n");
+
+        if (max_size < 4) {
+                return -1;
+        }
+
+        int pos = 4;
+        if (recv(conn, buffer, 4, 0) != 4) {
+                return -1;
+        }
+
+        while (pos < (int)max_size - 1) {
+                if (strncmp(&buffer[pos - 4], "\r\n\r\n", 4) == 0) {
+                        break;
+                }
                 if (recv(conn, buffer + pos, 1, 0) < 1) {
                         return -1;
                 }
                 pos++;
         }
-        buffer[pos] = '\0';
 
+        /* Check if we ran out of space without finding the terminator */
+        if (pos >= (int)max_size - 1 &&
+            strncmp(&buffer[pos - 4], "\r\n\r\n", 4) != 0) {
+                return -2;  /* Header too large */
+        }
+
+        buffer[pos] = '\0';
         return pos;
 }
 
@@ -39,9 +106,16 @@ int handle_request(int cli_conn) {
         struct request req; /* Create our request structure */
         char header[MAX_HEADER_SIZE];
 
-        /* Set the socket timeout */
-        // struct timeval tout = {10, 0};	/* Timeout structure: 3 mins */
-        // setsockopt(cli_conn, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, 18);
+        /* Set connection-level timeouts to prevent slowloris / hanging connections.
+         * Note: This protects the client socket. Long-running PPP scripts can still
+         * block the pipe read in the parent — a separate script timeout would be needed
+         * for full protection.
+         */
+        {
+                struct timeval tout = { CONNECTION_TIMEOUT_SEC, 0 };
+                setsockopt(cli_conn, SOL_SOCKET, SO_RCVTIMEO, &tout, sizeof(tout));
+                setsockopt(cli_conn, SOL_SOCKET, SO_SNDTIMEO, &tout, sizeof(tout));
+        }
 
         /* ---- Read the request and respond ------------------------------ */
 
@@ -51,7 +125,15 @@ receive:
         bzero(header, MAX_HEADER_SIZE);
 
         /* read request */
-        if (get_header(cli_conn, header) < 1) {
+        int header_len = get_header(cli_conn, header, MAX_HEADER_SIZE);
+        if (header_len < 0) {
+                if (header_len == -2) {
+                        /* Header too large - send 400 if possible */
+                        dprintf(cli_conn,
+                                "HTTP/1.1 400 Bad Request\r\n"
+                                "Connection: Close\r\n"
+                                "Content-Length: 0\r\n\r\n");
+                }
                 return 0;
         }
 
@@ -66,6 +148,11 @@ receive:
 
         /* some security checks */
         if (invalid_host(req.host) || invalid_path(req.url)) {
+                return serve_status(cli_conn, req, 400, "");
+        }
+
+        /* Hard limit on request body size (especially important for PPP) */
+        if (req.clen < 0 || req.clen > MAX_BODY_SIZE) {
                 return serve_status(cli_conn, req, 400, "");
         }
 
@@ -135,6 +222,16 @@ int serve(int conn, struct request r) {
                         strcpy(path, cpath);
                 }
         }
+
+        /* === Defense-in-depth path escape check === */
+        char resolved[MAX_PATH_SIZE];
+        if (!path_is_safe(path, resolved, sizeof(resolved))) {
+                return serve_status(conn, r, 403, "");
+        }
+        /* Use the resolved (canonical) path from now on */
+        strncpy(path, resolved, MAX_PATH_SIZE - 1);
+        path[MAX_PATH_SIZE - 1] = 0;
+
         printf("serving file %s\n", path);
 
         /* Verify the connection and request version */
@@ -159,7 +256,10 @@ int serve(int conn, struct request r) {
 
                 r.auth += 6;
                 char userpass[MAX_PATH_SIZE];
-                base64_decode(r.auth, userpass);
+                if (base64_decode(r.auth, userpass, sizeof(userpass)) < 0) {
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
                 char *user = strtok(userpass, ":");
                 char *pass = strtok(NULL, ":");
 
@@ -251,7 +351,7 @@ int serve_status(int conn, struct request req, int status, char *extra) {
 int ppp(int conn, struct request r) {
         DEBUGF("handling %s request\n", r.method);
 
-        /* if / was passed, redirect to index page */
+        /* Build path to the script (same style as serve()) */
         char path[MAX_PATH_SIZE];
         strcpy(path, root);
         strcat(path, r.host);
@@ -263,59 +363,115 @@ int ppp(int conn, struct request r) {
         strcat(path, ".sh");
         DEBUGF("running script %s\n", path);
 
-        /* execute file and create response */
-        pid_t pid = 0;
+        /* === Defense-in-depth path escape check (same as serve()) === */
+        char resolved[MAX_PATH_SIZE];
+        if (!path_is_safe(path, resolved, sizeof(resolved))) {
+                return serve_status(conn, r, 403, "");
+        }
+        strncpy(path, resolved, MAX_PATH_SIZE - 1);
+        path[MAX_PATH_SIZE - 1] = 0;
+
+        /* === Same permission + auth checks as regular file serving === */
+        struct stat stats;
+        if (stat(path, &stats) < 0) {
+                return serve_status(conn, r, 404, "");
+        }
+
+        uid_t run_as_uid = hostuid;
+        gid_t run_as_gid = hostgid;
+
+        if (!(stats.st_mode & S_IROTH)) {
+                puts("PPP script needs authorization");
+                if (!r.auth || strncmp(r.auth, "Basic", 5)) {
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                r.auth += 6;
+                char userpass[MAX_PATH_SIZE];
+                if (base64_decode(r.auth, userpass, sizeof(userpass)) < 0) {
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                char *user = strtok(userpass, ":");
+                char *pass = strtok(NULL, ":");
+
+                struct passwd *pw = getpwnam(user);
+                if (!pw) {
+                        puts("getpwnam error (PPP)");
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                if (pw_check(pw, pass) <= 0) {
+                        printf("password didn't check for PPP: %s\n", user);
+                        return serve_status(conn, r, 401,
+                                            "WWW-Authenticate: Basic\r\n");
+                }
+
+                run_as_uid = pw->pw_uid;
+                run_as_gid = pw->pw_gid;
+                printf("%s authorized for PPP script\n", user);
+        }
+
+        /* === Execute the script (with optional privilege drop) === */
         int inpipefd[2];
         int outpipefd[2];
 
-        pipe(inpipefd);
-        pipe(outpipefd);
-        pid = fork();
+        if (pipe(inpipefd) < 0 || pipe(outpipefd) < 0) {
+                return serve_status(conn, r, 500, "");
+        }
+
+        pid_t pid = fork();
         if (pid == 0) {
-                // Child
+                // Child: script executor
                 dup2(outpipefd[0], STDIN_FILENO);
                 dup2(inpipefd[1], STDOUT_FILENO);
 
-                // close unused pipe ends
                 close(outpipefd[1]);
                 close(inpipefd[0]);
 
+                /* Drop privileges if auth was required (same as serve()) */
+                if (run_as_uid != hostuid) {
+                        setgid(run_as_gid);
+                        setuid(run_as_uid);
+                }
+
                 execl(path, path, r.method, r.cenc, (char *)NULL);
-                // Nothing below this line should be executed by child
-                // process. If so, it means that the execl function
-                // wasn't successfull, so lets exit:
                 exit(1);
         }
 
-        // The code below will be executed only by parent. You can write
-        // and read from the child using pipefd descriptors, and you can
-        // send signals to the process using its pid by kill() function.
-        // If the child process exit unexpectedly, the parent
-        // process will obtain SIGCHLD signal that can be handled (e.g.
-        // you can respawn the child process).
-
-        // close unused pipe ends
+        // Parent side (connection handler)
         close(outpipefd[0]);
         close(inpipefd[1]);
 
+        if (r.clen > MAX_BODY_SIZE || r.clen < 0) {
+                close(outpipefd[1]);
+                close(inpipefd[0]);
+                return 0;
+        }
+
         r.body = malloc(r.clen + 1);
-        read(conn, r.body, r.clen);
-        r.body[r.clen] = 0;
-        write(outpipefd[1], r.body, r.clen);
+        if (r.body) {
+                read(conn, r.body, r.clen);
+                r.body[r.clen] = 0;
+                write(outpipefd[1], r.body, r.clen);
+        }
         close(outpipefd[1]);
-        DEBUGF("wrote %s to script\n", r.body);
         free(r.body);
 
-        char body[MAX_HEADER_SIZE] = {0};
-        int n = 0;
-        do {
-                n = read(inpipefd[0], &body, MAX_HEADER_SIZE);
-                DEBUGF("read %s from script\n", body);
-                write(conn, &body, n);
-                bzero(body, n);
-        } while (n > 0);
+        char body[MAX_HEADER_SIZE];
+        ssize_t n;
+        while ((n = read(inpipefd[0], body, sizeof(body))) > 0) {
+                write(conn, body, n);
+        }
         close(inpipefd[0]);
-        DEBUGF("script finished\n");
 
+        /* Restore original privileges (same as serve()) */
+        setuid(hostuid);
+        setgid(hostgid);
+
+        DEBUGF("PPP script finished\n");
         return 0;
 }
